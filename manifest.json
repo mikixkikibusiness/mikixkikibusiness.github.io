@@ -1,0 +1,8 @@
+{
+  "name": "Karne",
+  "short_name": "App",
+  "display": "standalone",
+  "start_url": ".",
+  "background_color": "#4B2A1C",
+  "theme_color": "#4B2A1C"
+}
