@@ -83,12 +83,6 @@
       width: auto;
       object-fit: contain;
     }
- 
-    @media (max-width: 768px) {
-      .logo img {
-        height: 75px;
-      }
-    }
 
     .nav-links {
       display: flex;
@@ -127,10 +121,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      text-decoration: none;
-      transition: transform 0.3s;
       cursor: pointer;
       border: none;
+      transition: transform 0.3s;
     }
 
     .cart-btn:hover {
@@ -159,7 +152,6 @@
       border: 2px solid white;
     }
 
-    /* Mobile nav modifications */
     @media (max-width: 768px) {
       .nav {
         justify-content: space-between;
@@ -180,32 +172,6 @@
     }
 
     /* Cart Sidebar */
-    .cart-sidebar {
-      position: fixed;
-      right: -450px;
-      top: 0;
-      width: 450px;
-      height: 100vh;
-      background: rgba(75, 42, 28, 0.98);
-      backdrop-filter: blur(20px);
-      z-index: 200;
-      transition: right 0.4s cubic-bezier(0.65, 0, 0.35, 1);
-      display: flex;
-      flex-direction: column;
-      box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
-    }
-
-    @media (max-width: 768px) {
-      .cart-sidebar {
-        width: 100%;
-        right: -100%;
-      }
-    }
-
-    .cart-sidebar.open {
-      right: 0;
-    }
-
     .cart-overlay {
       position: fixed;
       top: 0;
@@ -224,6 +190,32 @@
       pointer-events: all;
     }
 
+    .cart-sidebar {
+      position: fixed;
+      right: -450px;
+      top: 0;
+      width: 450px;
+      height: 100vh;
+      background: rgba(75, 42, 28, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 200;
+      transition: right 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .cart-sidebar.open {
+      right: 0;
+    }
+
+    @media (max-width: 768px) {
+      .cart-sidebar {
+        width: 100%;
+        right: -100%;
+      }
+    }
+
     .cart-header {
       padding: 2rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -231,6 +223,7 @@
       justify-content: space-between;
       align-items: center;
       color: white;
+      flex-shrink: 0;
     }
 
     .cart-header h2 {
@@ -358,8 +351,10 @@
 
     .cart-footer {
       padding: 2rem;
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 20px));
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
     }
 
     .cart-total {
@@ -385,7 +380,7 @@
       transition: all 0.3s;
     }
 
-    .checkout-btn:hover {
+    .checkout-btn:hover:not(:disabled) {
       transform: scale(1.02);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
@@ -512,18 +507,6 @@
 
     @media (max-width: 768px) {
       .choose-size {
-        position: relative;
-        left: 0;
-        transform: none;
-        font-size: 0.75rem;
-        margin-bottom: 0;
-        letter-spacing: 1px;
-        font-weight: 500;
-        order: 2;
-      }
-      
-      .choose-size::before,
-      .choose-size::after {
         display: none;
       }
     }
@@ -1048,8 +1031,8 @@
       <button class="cart-btn" onclick="toggleCart()" aria-label="Shopping Cart">
         <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 2L7 6H2l3.5 9h11L20 6h-5l-2-4H9z"/>
-          ircle cx="9"9" cy="20" r="2"/>
-          ircle cx="18" cy="20" r="2"2"/>
+          <circle cx="9" cy="20" r="2"/>
+          <circle cx="18" cy="20" r="2"/>
         </svg>
         <span class="cart-badge" id="cartBadgeNav">0</span>
       </button>
