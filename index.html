@@ -79,7 +79,7 @@
     }
 
     .logo img {
-      height: clamp(60px, 6vw, 85px);
+      height: clamp(65px, 6vw, 90px);
       width: auto;
       object-fit: contain;
     }
@@ -113,11 +113,11 @@
     /* Cart button */
     .cart-btn {
       position: relative;
-      background: white;
+      background: transparent;
       color: #000000;
       width: 50px;
       height: 50px;
-      border-radius: 50%;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -130,9 +130,10 @@
       transform: scale(1.1);
     }
 
+    /* FIXED: Changed to img tag */
     .cart-icon {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       object-fit: contain;
     }
 
@@ -534,7 +535,14 @@
       justify-content: center;
       z-index: 1;
       padding: 0 clamp(1.5rem, 4vw, 4rem);
-      overflow: hidden; /* ADDED: Prevent visibility of adjacent slides */
+      /* FIXED: Added mask to hide adjacent slides on mobile without breaking animations */
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper {
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+      }
     }
 
     .layout-grid {
@@ -599,7 +607,6 @@
     @media (max-width: 768px) {
       .text-slides-container {
         height: 60px;
-        overflow: hidden; /* ADDED: Clip overflow on mobile */
       }
     }
 
@@ -684,7 +691,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden; /* CHANGED: from visible to hidden to clip adjacent slides */
+      overflow: visible;
     }
 
     @media (max-width: 1024px) {
@@ -810,7 +817,7 @@
       position: relative;
       height: 500px;
       overflow: hidden;
-      margin-top: -150px; /* MOVED UP: from -80px */
+      margin-top: -80px;
       width: 100%;
       padding-left: clamp(0, 2vw, 2rem);
     }
@@ -818,14 +825,14 @@
     @media (max-width: 1024px) {
       .right-content {
         height: 400px;
-        margin-top: -120px; /* MOVED UP: from -60px */
+        margin-top: -60px;
       }
     }
 
     @media (max-width: 768px) {
       .right-content {
         height: auto;
-        margin-top: -60px; /* MOVED UP: from -20px */
+        margin-top: -20px;
         align-items: center;
         order: 3;
         padding: 0;
@@ -844,7 +851,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden; /* ADDED: Clip overflow on mobile */
       }
     }
 
@@ -886,13 +892,13 @@
     .size-selector {
       display: flex;
       gap: 1rem;
-      margin-bottom: 2rem; /* INCREASED: from 1.5rem */
+      margin-bottom: 1.5rem;
     }
 
     @media (max-width: 768px) {
       .size-selector {
         gap: 0.8rem;
-        margin-bottom: 1.5rem; /* INCREASED: from 1rem */
+        margin-bottom: 1rem;
       }
     }
 
@@ -952,13 +958,11 @@
     .animal-selector {
       display: flex;
       gap: 1rem;
-      margin-bottom: 2rem; /* ADDED: spacing below animal selector */
     }
 
     @media (max-width: 768px) {
       .animal-selector {
         gap: 0.8rem;
-        margin-bottom: 1.5rem; /* ADDED: spacing for mobile */
       }
     }
 
@@ -1035,6 +1039,7 @@
     </div>
     <div class="nav-right">
       <button class="cart-btn" onclick="toggleCart()" aria-label="Shopping Cart">
+        <!-- FIXED: Using img tag instead of SVG -->
         <img class="cart-icon" src="Images/Icons/basket.png" alt="Basket">
         <span class="cart-badge" id="cartBadgeNav">0</span>
       </button>
@@ -1209,24 +1214,19 @@
 
     // FIXED: Separate selection states for each slide
     let slideSelections = {
-      0: { // Mexico slide
+      0: {
         flavor: 'mexico',
         size: '25',
         animal: 'cow',
         price: 12.99
       },
-      1: { // Desperado slide
+      1: {
         flavor: 'desperado',
         size: '25',
         animal: 'cow',
         price: 12.99
       }
     };
-
-    // FIXED: Get current selection based on active slide
-    function getCurrentSelection() {
-      return slideSelections[currentSlide];
-    }
 
     // Slide switching
     function switchSlide(index) {
@@ -1318,11 +1318,11 @@
       }
     });
 
-    // FIXED: Size button selection - now updates the correct slide's selection
+    // FIXED: Size button selection - updates correct slide
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const group = btn.getAttribute('data-group');
-        const slideIndex = parseInt(group) - 1; // group 1 = slide 0, group 2 = slide 1
+        const slideIndex = parseInt(group) - 1;
         
         document.querySelectorAll(`.size-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -1332,11 +1332,11 @@
       });
     });
 
-    // FIXED: Animal button selection - now updates the correct slide's selection
+    // FIXED: Animal button selection - updates correct slide
     document.querySelectorAll('.animal-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const group = btn.getAttribute('data-group');
-        const slideIndex = parseInt(group) - 1; // group 1 = slide 0, group 2 = slide 1
+        const slideIndex = parseInt(group) - 1;
         
         document.querySelectorAll(`.animal-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -1397,9 +1397,9 @@
       }
     }
 
-    // FIXED: Add to cart now uses current slide's selection
+    // FIXED: Add to cart uses current slide's selection
     function addToCart() {
-      const selection = getCurrentSelection();
+      const selection = slideSelections[currentSlide];
       const product = products[selection.flavor];
       
       const cartItem = {
@@ -1412,7 +1412,6 @@
         quantity: 1
       };
 
-      // Check if item already exists
       const existingIndex = cart.findIndex(item => item.id === cartItem.id);
       if (existingIndex >= 0) {
         cart[existingIndex].quantity++;
@@ -1420,12 +1419,9 @@
         cart.push(cartItem);
       }
 
-      // Save to cookie
       setCookie('cart', cart, 7);
-      
       updateCartDisplay();
 
-      // Visual feedback
       const btn = document.querySelector('.shop-now-btn');
       btn.style.background = '#4CAF50';
       btn.style.color = 'white';
