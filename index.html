@@ -133,6 +133,7 @@
     .cart-icon {
       width: 24px;
       height: 24px;
+      object-fit: contain;
     }
 
     .cart-badge {
@@ -533,6 +534,7 @@
       justify-content: center;
       z-index: 1;
       padding: 0 clamp(1.5rem, 4vw, 4rem);
+      overflow: hidden; /* ADDED: Prevent visibility of adjacent slides */
     }
 
     .layout-grid {
@@ -597,6 +599,7 @@
     @media (max-width: 768px) {
       .text-slides-container {
         height: 60px;
+        overflow: hidden; /* ADDED: Clip overflow on mobile */
       }
     }
 
@@ -681,7 +684,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: visible;
+      overflow: hidden; /* CHANGED: from visible to hidden to clip adjacent slides */
     }
 
     @media (max-width: 1024px) {
@@ -807,7 +810,7 @@
       position: relative;
       height: 500px;
       overflow: hidden;
-      margin-top: -80px;
+      margin-top: -150px; /* MOVED UP: from -80px */
       width: 100%;
       padding-left: clamp(0, 2vw, 2rem);
     }
@@ -815,14 +818,14 @@
     @media (max-width: 1024px) {
       .right-content {
         height: 400px;
-        margin-top: -60px;
+        margin-top: -120px; /* MOVED UP: from -60px */
       }
     }
 
     @media (max-width: 768px) {
       .right-content {
         height: auto;
-        margin-top: -20px;
+        margin-top: -60px; /* MOVED UP: from -20px */
         align-items: center;
         order: 3;
         padding: 0;
@@ -841,6 +844,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden; /* ADDED: Clip overflow on mobile */
       }
     }
 
@@ -882,13 +886,13 @@
     .size-selector {
       display: flex;
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem; /* INCREASED: from 1.5rem */
     }
 
     @media (max-width: 768px) {
       .size-selector {
         gap: 0.8rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem; /* INCREASED: from 1rem */
       }
     }
 
@@ -948,11 +952,13 @@
     .animal-selector {
       display: flex;
       gap: 1rem;
+      margin-bottom: 2rem; /* ADDED: spacing below animal selector */
     }
 
     @media (max-width: 768px) {
       .animal-selector {
         gap: 0.8rem;
+        margin-bottom: 1.5rem; /* ADDED: spacing for mobile */
       }
     }
 
@@ -1029,11 +1035,7 @@
     </div>
     <div class="nav-right">
       <button class="cart-btn" onclick="toggleCart()" aria-label="Shopping Cart">
-        <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 2L7 6H2l3.5 9h11L20 6h-5l-2-4H9z"/>
-          <circle cx="9" cy="20" r="2"/>
-          <circle cx="18" cy="20" r="2"/>
-        </svg>
+        <img class="cart-icon" src="Images/Icons/basket.png" alt="Basket">
         <span class="cart-badge" id="cartBadgeNav">0</span>
       </button>
     </div>
@@ -1205,12 +1207,26 @@
       desperado: { name: 'Desperádo', id: 'PROD_002' }
     };
 
-    let currentSelection = {
-      flavor: 'mexico',
-      size: '25',
-      animal: 'cow',
-      price: 12.99
+    // FIXED: Separate selection states for each slide
+    let slideSelections = {
+      0: { // Mexico slide
+        flavor: 'mexico',
+        size: '25',
+        animal: 'cow',
+        price: 12.99
+      },
+      1: { // Desperado slide
+        flavor: 'desperado',
+        size: '25',
+        animal: 'cow',
+        price: 12.99
+      }
     };
+
+    // FIXED: Get current selection based on active slide
+    function getCurrentSelection() {
+      return slideSelections[currentSlide];
+    }
 
     // Slide switching
     function switchSlide(index) {
@@ -1244,11 +1260,9 @@
       if (index === 0) {
         bgMexico.classList.add('active');
         bgPurple.classList.remove('active');
-        currentSelection.flavor = 'mexico';
       } else {
         bgMexico.classList.remove('active');
         bgPurple.classList.add('active');
-        currentSelection.flavor = 'desperado';
       }
       
       currentSlide = index;
@@ -1304,24 +1318,30 @@
       }
     });
 
-    // Size button selection
+    // FIXED: Size button selection - now updates the correct slide's selection
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const group = btn.getAttribute('data-group');
+        const slideIndex = parseInt(group) - 1; // group 1 = slide 0, group 2 = slide 1
+        
         document.querySelectorAll(`.size-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        currentSelection.size = btn.getAttribute('data-size');
-        currentSelection.price = parseFloat(btn.getAttribute('data-price'));
+        
+        slideSelections[slideIndex].size = btn.getAttribute('data-size');
+        slideSelections[slideIndex].price = parseFloat(btn.getAttribute('data-price'));
       });
     });
 
-    // Animal button selection
+    // FIXED: Animal button selection - now updates the correct slide's selection
     document.querySelectorAll('.animal-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const group = btn.getAttribute('data-group');
+        const slideIndex = parseInt(group) - 1; // group 1 = slide 0, group 2 = slide 1
+        
         document.querySelectorAll(`.animal-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        currentSelection.animal = btn.getAttribute('data-animal');
+        
+        slideSelections[slideIndex].animal = btn.getAttribute('data-animal');
       });
     });
 
@@ -1377,16 +1397,18 @@
       }
     }
 
+    // FIXED: Add to cart now uses current slide's selection
     function addToCart() {
-      const product = products[currentSelection.flavor];
+      const selection = getCurrentSelection();
+      const product = products[selection.flavor];
       
       const cartItem = {
-        id: `${product.id}_${currentSelection.animal}_${currentSelection.size}`,
+        id: `${product.id}_${selection.animal}_${selection.size}`,
         productId: product.id,
         productName: product.name,
-        animal: currentSelection.animal,
-        size: currentSelection.size,
-        price: currentSelection.price,
+        animal: selection.animal,
+        size: selection.size,
+        price: selection.price,
         quantity: 1
       };
 
