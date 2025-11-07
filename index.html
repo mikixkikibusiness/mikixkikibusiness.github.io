@@ -1,3 +1,10 @@
+<?php
+require_once 'db_config.php';
+
+// Always show coupons - API will handle connection
+$hasConnection = true;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +14,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <title>Suja Organic</title>
+  <title>Checkout - Suja Organic</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -17,46 +24,22 @@
     }
 
     html, body {
-      overflow: hidden;
       overscroll-behavior: none;
+      height: 100vh;
+      width: 100vw;
     }
 
     body {
       font-family: 'Poppins', sans-serif;
-      overflow: hidden !important;
-      min-height: 100vh;
       width: 100vw;
-      position: relative;
-      background: #333333 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overscroll-behavior: none !important;
+      background: linear-gradient(135deg, #1a1a1d 0%, #2d2d30 50%, #1a1a1d 100%);
+      margin: 0;
+      padding: 0;
       padding-bottom: env(safe-area-inset-bottom, 0);
       padding-top: env(safe-area-inset-top, 0);
-    }
-
-    /* Background layers */
-    .bg-layer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 0;
-      opacity: 0;
-      transition: opacity 1s ease;
-    }
-
-    .bg-layer.mexico {
-      background: linear-gradient(90deg, #4B2A1C 0%, #774734 50%, #4B2A1C 100%);
-    }
-
-    .bg-layer.purple {
-      background: linear-gradient(90deg, #5a1c1c 0%, #852b2b 50%, #5a1c1c 100%);
-    }
-
-    .bg-layer.active {
-      opacity: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
     }
 
     /* Navigation */
@@ -69,7 +52,14 @@
       justify-content: space-between;
       align-items: center;
       z-index: 100;
-      padding: 2rem clamp(1.5rem, 4vw, 4rem);
+      padding: 1.5rem clamp(1.5rem, 4vw, 4rem);
+      background: linear-gradient(180deg, 
+        rgba(26, 26, 29, 0.98) 0%, 
+        rgba(26, 26, 29, 0.95) 70%, 
+        rgba(26, 26, 29, 0.85) 90%, 
+        rgba(26, 26, 29, 0) 100%);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
     }
 
     .logo {
@@ -79,7 +69,7 @@
     }
 
     .logo img {
-      height: clamp(65px, 6vw, 90px);
+      height: clamp(60px, 6vw, 90px);
       width: auto;
       object-fit: contain;
     }
@@ -110,240 +100,364 @@
       justify-content: flex-end;
     }
 
-    /* Cart button */
-    .cart-btn {
-      position: relative;
-      background: transparent;
+    .place-order-btn {
+      background: white;
       color: #000000;
-      width: 50px;
-      height: 50px;
-      border-radius: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 500;
+      text-decoration: none;
       transition: transform 0.3s;
+      font-size: clamp(0.85rem, 1vw, 1rem);
+      white-space: nowrap;
     }
 
-    .cart-btn:hover {
-      transform: scale(1.1);
-    }
-
-    /* FIXED: Changed to img tag */
-    .cart-icon {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
-    }
-
-    .cart-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #ff4444;
-      color: white;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-      border: 2px solid white;
+    .place-order-btn:hover {
+      transform: scale(1.05);
     }
 
     @media (max-width: 768px) {
       .nav {
-        justify-content: space-between;
-        padding: 1.5rem;
+        justify-content: center;
+        padding: 1.2rem 1rem;
+        flex-shrink: 0;
       }
       
       .logo {
         flex: none;
       }
       
-      .nav-links {
-        display: none;
+      .logo img {
+        height: clamp(55px, 12vw, 70px);
       }
       
+      .nav-links,
       .nav-right {
-        flex: none;
+        display: none;
       }
     }
 
-    /* Cart Sidebar */
-    .cart-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 199;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s;
-    }
-
-    .cart-overlay.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .cart-sidebar {
-      position: fixed;
-      right: -450px;
-      top: 0;
-      width: 450px;
-      height: 100vh;
-      background: rgba(75, 42, 28, 0.98);
-      backdrop-filter: blur(20px);
-      z-index: 200;
-      transition: right 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+    /* Main Checkout Content */
+    .checkout-container {
+      flex: 1;
+      padding: 1.5rem clamp(1rem, 3vw, 4rem);
+      margin-top: 120px;
       display: flex;
-      flex-direction: column;
-      box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .cart-sidebar.open {
-      right: 0;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 120px);
     }
 
     @media (max-width: 768px) {
-      .cart-sidebar {
-        width: 100%;
-        right: -100%;
+      .checkout-container {
+        margin-top: 100px;
+        padding: 0.75rem;
+        min-height: calc(100vh - 100px);
       }
     }
 
-    .cart-header {
-      padding: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      flex-shrink: 0;
+    @media (max-width: 390px) {
+      .checkout-container {
+        padding: 0.5rem;
+        margin-top: 95px;
+      }
     }
 
-    .cart-header h2 {
+    .checkout-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      min-height: 500px;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-grid {
+        flex-direction: column;
+        align-items: center;
+        min-height: auto;
+      }
+    }
+
+    .checkout-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Order Summary */
+    .order-summary {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      color: white;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+      visibility: visible;
+      opacity: 1;
+      transform: scale(1);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0s;
+    }
+
+    .order-summary.hidden {
+      visibility: hidden;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0.35s;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .order-summary {
+        padding: 1rem;
+        border-radius: 16px;
+        max-width: 100%;
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .order-summary {
+        padding: 0.85rem;
+        border-radius: 14px;
+      }
+    }
+
+    .order-summary h3 {
       font-size: 1.5rem;
+      margin-bottom: 1.5rem;
       font-weight: 600;
     }
 
-    .cart-close {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 2rem;
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: all 0.3s;
+    @media (max-width: 768px) {
+      .order-summary h3 {
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
+      }
     }
 
-    .cart-close:hover {
-      background: rgba(255, 255, 255, 0.1);
+    @media (max-width: 390px) {
+      .order-summary h3 {
+        font-size: 1.05rem;
+        margin-bottom: 0.85rem;
+      }
     }
 
-    .cart-body {
+    /* Cart Items Grid */
+    .cart-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
       flex: 1;
+      max-height: 400px;
       overflow-y: auto;
-      padding: 2rem;
+      padding-right: 0.5rem;
+    }
+
+    .cart-items::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .cart-items::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .cart-items {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        max-height: 280px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .cart-items {
+        gap: 0.6rem;
+        max-height: 250px;
+      }
     }
 
     .cart-empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: white;
+      grid-column: 1 / -1;
       text-align: center;
+      opacity: 0.7;
+      padding: 2rem;
+      font-size: 1rem;
     }
 
-    .cart-empty-emoji {
-      font-size: 4rem;
-      margin-bottom: 1rem;
+    @media (max-width: 390px) {
+      .cart-empty {
+        padding: 1.5rem;
+        font-size: 0.9rem;
+      }
     }
 
-    .cart-empty p {
-      font-size: 1.1rem;
-      opacity: 0.8;
-    }
-
-    .cart-items-list {
+    /* Cart Item Card */
+    .cart-item {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.85rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.65rem;
+      position: relative;
+      transition: all 0.3s;
     }
 
-    .cart-item {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 1rem;
-      border-radius: 12px;
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      color: white;
+    .cart-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .cart-item {
+        padding: 0.65rem;
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .cart-item {
+        padding: 0.55rem;
+        border-radius: 10px;
+      }
     }
 
     .cart-item-image {
-      width: 60px;
-      height: 60px;
-      background: white;
+      width: 100%;
+      height: 110px;
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .cart-item-image {
+        height: 85px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .cart-item-image {
+        height: 75px;
+      }
     }
 
     .cart-item-image img {
-      width: 35px;
-      height: 35px;
+      max-width: 90%;
+      max-height: 90%;
       object-fit: contain;
     }
 
-    .cart-item-details {
-      flex: 1;
+    .cart-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
     }
 
     .cart-item-name {
       font-weight: 600;
-      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      line-height: 1.2;
     }
 
-    .cart-item-info {
-      font-size: 0.85rem;
-      opacity: 0.8;
+    @media (max-width: 768px) {
+      .cart-item-name {
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .cart-item-name {
+        font-size: 0.75rem;
+      }
+    }
+
+    .cart-item-details {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    @media (max-width: 390px) {
+      .cart-item-details {
+        font-size: 0.7rem;
+        gap: 0.3rem;
+      }
+    }
+
+    .cart-item-details span {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
     }
 
     .cart-item-price {
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .cart-item-price {
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .cart-item-price {
+        font-size: 0.75rem;
+      }
     }
 
     .cart-item-remove {
-      background: rgba(255, 68, 68, 0.8);
+      position: absolute;
+      top: 0.4rem;
+      right: 0.4rem;
+      background: rgba(255, 68, 68, 0.85);
       color: white;
       border: none;
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       cursor: pointer;
+      transition: all 0.3s;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s;
-      flex-shrink: 0;
+      font-size: 1.1rem;
+      line-height: 1;
     }
 
     .cart-item-remove:hover {
@@ -351,22 +465,246 @@
       transform: scale(1.1);
     }
 
-    .cart-footer {
-      padding: 2rem;
-      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 20px));
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.2);
-      flex-shrink: 0;
+    @media (max-width: 390px) {
+      .cart-item-remove {
+        width: 22px;
+        height: 22px;
+        font-size: 1rem;
+      }
     }
 
-    .cart-total {
+    /* Summary Section */
+    .summary-section {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .summary-section {
+        padding-top: 1rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .summary-section {
+        padding-top: 0.85rem;
+      }
+    }
+
+    .coupon-section {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.85rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    @media (max-width: 390px) {
+      .coupon-section {
+        padding: 0.7rem;
+        border-radius: 8px;
+      }
+    }
+
+    .coupon-input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 390px) {
+      .coupon-input-group {
+        gap: 0.4rem;
+      }
+    }
+
+    .coupon-input {
+      flex: 1;
+      padding: 0.6rem 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+
+    .coupon-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .coupon-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    @media (max-width: 390px) {
+      .coupon-input {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    .coupon-btn {
+      padding: 0.6rem 0.9rem;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .coupon-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    @media (max-width: 390px) {
+      .coupon-btn {
+        padding: 0.55rem 0.75rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    .coupon-message {
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 390px) {
+      .coupon-message {
+        font-size: 0.7rem;
+      }
+    }
+
+    .coupon-message.success {
+      color: #81c784;
+    }
+
+    .coupon-message.error {
+      color: #ef5350;
+    }
+
+    .coupon-applied {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem;
+      background: rgba(129, 199, 132, 0.15);
+      border: 1px solid rgba(129, 199, 132, 0.3);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 390px) {
+      .coupon-applied {
+        padding: 0.6rem;
+      }
+    }
+
+    .coupon-applied-text {
+      font-size: 0.85rem;
+      color: #81c784;
+    }
+
+    @media (max-width: 390px) {
+      .coupon-applied-text {
+        font-size: 0.8rem;
+      }
+    }
+
+    .coupon-remove {
+      background: none;
+      border: none;
+      color: #81c784;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.75rem;
+      transition: all 0.3s;
+    }
+
+    .coupon-remove:hover {
+      color: #ef5350;
+    }
+
+    @media (max-width: 390px) {
+      .coupon-remove {
+        font-size: 0.7rem;
+      }
+    }
+
+    .summary-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 390px) {
+      .summary-rows {
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+      }
+    }
+
+    .summary-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: white;
-      margin-bottom: 1.5rem;
-      font-size: 1.2rem;
+      padding: 0.65rem 0;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .summary-row {
+        padding: 0.55rem 0;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .summary-row {
+        padding: 0.5rem 0;
+        font-size: 0.8rem;
+      }
+    }
+
+    .summary-row.total {
+      font-size: 1.25rem;
+      font-weight: 700;
+      padding-top: 0.7rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .summary-row.total {
+        font-size: 1.05rem;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .summary-row.total {
+        font-size: 0.95rem;
+        padding-top: 0.6rem;
+      }
+    }
+
+    .summary-label {
+      opacity: 0.9;
+    }
+
+    .summary-value {
       font-weight: 600;
+    }
+
+    .summary-value.discount {
+      color: #81c784;
     }
 
     .checkout-btn {
@@ -378,8 +716,9 @@
       font-size: 1rem;
       border: none;
       cursor: pointer;
-      width: 100%;
       transition: all 0.3s;
+      width: 100%;
+      margin-top: 1.5rem;
     }
 
     .checkout-btn:hover:not(:disabled) {
@@ -387,646 +726,212 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
+    .checkout-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
     .checkout-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
 
-    /* Footer */
-    .footer {
-      position: fixed;
-      bottom: 30px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      font-size: clamp(1rem, 1vw, 1.5rem);
-      z-index: 100;
-      padding: 2rem clamp(1.5rem, 4vw, 4rem);
-    }
-
     @media (max-width: 768px) {
-      .footer {
-        flex-direction: column-reverse;
-        gap: 0.75rem;
-        bottom: 15px;
-        padding: 1rem 1.5rem;
+      .checkout-btn {
+        padding: 0.85rem 1.5rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
       }
     }
 
-    .social-icons {
-      flex: 1;
-      display: flex;
-      gap: clamp(1rem, 2.5vw, 2.3rem);
-      align-items: center;
-    }
-
-    @media (max-width: 768px) {
-      .social-icons {
-        display: none;
+    @media (max-width: 390px) {
+      .checkout-btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.85rem;
+        margin-top: 0.85rem;
       }
     }
 
-    .social-icons a {
+    /* Payment Section - Desktop uses absolute, Mobile uses fixed */
+    .payment-section {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
       color: white;
-      opacity: 0.8;
-      transition: opacity 0.3s, transform 0.3s;
-      text-decoration: none;
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0.35s;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      z-index: 50;
+    }
+
+    .payment-section.active {
+      visibility: visible;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0s;
+    }
+
+    @media (max-width: 768px) {
+      .payment-section {
+        padding: 1rem;
+        max-width: calc(100% - 1rem);
+        position: fixed;
+        top: 50vh;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.92);
+        z-index: 99;
+        border-radius: 16px;
+      }
+      
+      .payment-section.active {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @media (max-width: 390px) {
+      .payment-section {
+        padding: 0.85rem;
+        max-width: calc(100% - 0.75rem);
+        border-radius: 14px;
+      }
+    }
+
+    .payment-container {
+      background: transparent;
+      backdrop-filter: none;
+      border-radius: 0;
+      padding: 0;
+      color: white;
+      text-align: center;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .payment-title {
+      font-size: clamp(1.15rem, 3vw, 1.5rem);
+      font-weight: 700;
+      margin-bottom: clamp(0.85rem, 2vw, 1.3rem);
+      color: white;
+    }
+
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.75rem, 2vw, 1rem);
+    }
+
+    .payment-method {
+      background: linear-gradient(135deg, #5b5bff 0%, #3f3fbf 100%);
+      border: none;
+      border-radius: 10px;
+      padding: clamp(0.7rem, 1.5vw, 0.95rem) clamp(0.85rem, 2vw, 1.15rem);
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: clamp(0.65rem, 1.5vw, 0.95rem);
+      font-weight: 600;
+      font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+      color: white;
+    }
+
+    .payment-method:nth-child(1) {
+      background: linear-gradient(135deg, #5b5bff 0%, #3f3fbf 100%);
+    }
+
+    .payment-method:nth-child(2) {
+      background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    }
+
+    .payment-method:nth-child(3) {
+      background: linear-gradient(135deg, #0052cc 0%, #003366 100%);
+    }
+
+    .payment-method:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 390px) {
+      .payment-method {
+        border-radius: 8px;
+      }
+    }
+
+    .payment-method-icon {
+      width: clamp(36px, 6vw, 44px);
+      height: clamp(36px, 6vw, 44px);
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
-    .social-icons a:hover {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-
-    .social-icons img {
-      width: clamp(18px, 1.5vw, 24px);
-      height: clamp(18px, 1.5vw, 24px);
+    .payment-method-icon img {
+      width: clamp(26px, 4vw, 34px);
+      height: clamp(26px, 4vw, 34px);
+      object-fit: contain;
       filter: brightness(0) invert(1);
     }
 
-    .shop-now-btn {
-      background: white;
-      min-width: 140px;
-      height: 45px;
-      color: #000000;
-      padding: 0.6rem 2.5rem;
-      border-radius: 50px;
-      font-weight: 500;
-      font-size: clamp(0.85rem, 1vw, 1rem);
-      border: none;
-      cursor: pointer;
-      transition: transform 0.3s;
-      white-space: nowrap;
-    }
-
-    .shop-now-btn:hover {
-      transform: scale(1.05);
-    }
-
-    @media (max-width: 768px) {
-      .shop-now-btn {
-        width: 90%;
-        max-width: 320px;
-        height: 50px;
-        font-size: 1rem;
-        font-weight: 600;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        order: 1;
-      }
-    }
-
-    .choose-size {
-      font-size: 0.9rem;
-      opacity: 0.8;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      top: 50%;
-    }
-
-    .choose-size::before,
-    .choose-size::after {
-      content: '';
-      width: 60px;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.5);
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .choose-size {
-        display: none;
-      }
-    }
-
-    .footer-spacer {
+    .payment-method-text {
       flex: 1;
+      text-align: left;
     }
 
-    @media (max-width: 768px) {
-      .footer-spacer {
-        display: none;
-      }
-    }
-
-    /* Main content */
-    .content-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1;
-      padding: 0 clamp(1.5rem, 4vw, 4rem);
-      /* FIXED: Added mask to hide adjacent slides on mobile without breaking animations */
-    }
-
-    @media (max-width: 768px) {
-      .content-wrapper {
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-        mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-      }
-    }
-
-    .layout-grid {
-      display: grid;
-      grid-template-columns: minmax(280px, 1fr) auto minmax(280px, 1fr);
-      gap: clamp(2rem, 4vw, 6rem);
-      align-items: center;
-      max-width: 1600px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 768px) {
-      .layout-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        gap: 1.5rem;
-        padding-top: 100px;
-        padding-bottom: 140px;
-      }
-    }
-
-    /* Left content */
-    .text-content {
-      color: white;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      position: relative;
-      height: 500px;
-      overflow: hidden;
-      margin-top: -80px;
-      padding-right: clamp(0, 2vw, 2rem);
-    }
-
-    @media (max-width: 1024px) {
-      .text-content {
-        height: 400px;
-        margin-top: -60px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .text-content {
-        height: auto;
-        margin-top: 0;
-        align-items: center;
-        text-align: center;
-        padding: 0;
-        order: 1;
-      }
-    }
-
-    .text-slides-container {
-      position: relative;
-      width: 100%;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 768px) {
-      .text-slides-container {
-        height: 60px;
-      }
-    }
-
-    .text-slide {
-      position: absolute;
-      width: 100%;
-      max-width: 350px;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 1024px) {
-      .text-slide {
-        max-width: 280px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .text-slide {
-        max-width: 100%;
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-    }
-
-    .text-slide:nth-child(1) {
-      top: 0;
-    }
-
-    .text-slide:nth-child(2) {
-      top: 500px;
-    }
-
-    @media (max-width: 1024px) {
-      .text-slide:nth-child(2) {
-        top: 400px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .text-slide:nth-child(2) {
-        top: 60px;
-      }
-    }
-
-    .text-content h1 {
-      font-size: clamp(1.5rem, 3vw, 3.5rem);
-      margin-bottom: 1.5rem;
-      line-height: 1.1;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 768px) {
-      .text-content h1 {
-        font-size: 2rem;
-        margin-bottom: 0;
-        font-weight: 700;
-        letter-spacing: 2px;
-      }
-    }
-
-    .text-content p {
-      font-size: clamp(0.75rem, 1.5vw, 1rem);
-      line-height: 1.7;
-      opacity: 0.95;
-      font-weight: 300;
-    }
-
-    @media (max-width: 768px) {
-      .text-content p {
-        display: none;
-      }
-    }
-
-    /* Center content */
-    .center-content {
-      position: relative;
-      width: 100%;
-      height: 500px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: visible;
-    }
-
-    @media (max-width: 1024px) {
-      .center-content {
-        height: 400px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .center-content {
-        height: 350px;
-        order: 2;
-        margin-top: -20px;
-      }
-    }
-
-    .slides-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    .product-slide {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    .product-slide:nth-child(1) {
-      top: 0;
-    }
-
-    .product-slide:nth-child(2) {
-      top: 150%;
-    }
-
-    .product-image {
-      max-width: 400px;
-      width: 400px;
-      max-height: 700px;
-      height: 800px;
-      margin-left: -40px;
-      margin-top: -100px;
-      z-index: 2;
-      transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 1024px) {
-      .product-image {
-        max-width: 300px;
-        width: 300px;
-        height: 600px;
-        margin-left: -30px;
-        margin-top: -80px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .product-image {
-        max-width: 240px;
-        width: 240px;
-        height: 470px;
-        margin-left: 0;
-        margin-top: -100px;
-        object-fit: contain;
-      }
-    }
-
-    .product-slide.zoom-out .product-image {
-      transform: scale(0.9);
-    }
-
-    .product-slide.zoom-in .product-image {
-      transform: scale(1.1);
-    }
-
-    .flavorings-image {
-      position: absolute;
-      top: 55%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 1000px;
-      height: auto;
-      z-index: 1;
-      opacity: 0.6;
-      transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 1024px) {
-      .flavorings-image {
-        width: 350px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .flavorings-image {
-        width: 270px;
-        margin-top: -30px;
-      }
-    }
-
-    .product-slide.zoom-out .flavorings-image {
-      transform: translate(-50%, -50%) scale(0.9);
-    }
-
-    .product-slide.zoom-in .flavorings-image {
-      transform: translate(-50%, -50%) scale(1.1);
-    }
-
-    /* Right content */
-    .right-content {
-      color: white;
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-      position: relative;
-      height: 500px;
-      overflow: hidden;
-      margin-top: -80px;
-      width: 100%;
-      padding-left: clamp(0, 2vw, 2rem);
-    }
-
-    @media (max-width: 1024px) {
-      .right-content {
-        height: 400px;
-        margin-top: -60px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .right-content {
-        height: auto;
-        margin-top: -20px;
-        align-items: center;
-        order: 3;
-        padding: 0;
-      }
-    }
-
-    .size-slides-container {
-      position: relative;
-      width: 100%;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 768px) {
-      .size-slides-container {
-        height: 140px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
-
-    .size-slide {
-      position: absolute;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    @media (max-width: 768px) {
-      .size-slide {
-        align-items: center;
-      }
-    }
-
-    .size-slide:nth-child(1) {
-      top: 0;
-    }
-
-    .size-slide:nth-child(2) {
-      top: 500px;
-    }
-
-    @media (max-width: 1024px) {
-      .size-slide:nth-child(2) {
-        top: 400px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .size-slide:nth-child(2) {
-        top: 140px;
-      }
-    }
-
-    .size-selector {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    @media (max-width: 768px) {
-      .size-selector {
-        gap: 0.8rem;
-        margin-bottom: 1rem;
-      }
-    }
-
-    .size-btn {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: white;
-      color: #000000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: none;
-      transition: all 0.3s;
-      cursor: pointer;
+    .payment-method-name {
+      font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+      font-weight: 700;
+      display: block;
       line-height: 1.2;
-      opacity: 0.5;
     }
 
-    @media (max-width: 1024px) {
-      .size-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 0.75rem;
-      }
+    .payment-method-desc {
+      font-size: clamp(0.7rem, 1vw, 0.8rem);
+      opacity: 0.9;
+      display: block;
+      font-weight: 400;
+      line-height: 1.2;
+      margin-top: 0.2rem;
     }
 
-    @media (max-width: 768px) {
-      .size-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 0.75rem;
-        border: 3px solid transparent;
-      }
-    }
-
-    .size-btn.active {
-      opacity: 1;
-    }
-
-    @media (max-width: 768px) {
-      .size-btn.active {
-        border-color: white;
-        background: transparent;
-        color: white;
-      }
-    }
-
-    .size-btn:hover:not(.active) {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    /* Animal selection */
-    .animal-selector {
-      display: flex;
-      gap: 1rem;
-    }
-
-    @media (max-width: 768px) {
-      .animal-selector {
-        gap: 0.8rem;
-      }
-    }
-
-    .animal-btn {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .payment-back-btn {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
       border: none;
-      transition: all 0.3s;
+      padding: clamp(0.6rem, 1.2vw, 0.7rem) clamp(0.95rem, 1.8vw, 1.25rem);
+      border-radius: 50px;
+      font-weight: 600;
       cursor: pointer;
-      opacity: 0.5;
-      padding: 0;
+      margin-top: clamp(0.85rem, 2vw, 1.3rem);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: clamp(0.75rem, 0.9vw, 0.85rem);
     }
 
-    .animal-btn img {
-      width: 50%;
-      height: 50%;
-      object-fit: contain;
-    }
-
-    @media (max-width: 1024px) {
-      .animal-btn {
-        width: 60px;
-        height: 60px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .animal-btn {
-        width: 60px;
-        height: 60px;
-        border: 3px solid transparent;
-      }
-    }
-
-    .animal-btn.active {
-      opacity: 1;
-    }
-
-    @media (max-width: 768px) {
-      .animal-btn.active {
-        border-color: white;
-        background: transparent;
-      }
-      
-      .animal-btn.active img {
-        filter: brightness(0) invert(1);
-      }
-    }
-
-    .animal-btn:hover:not(.active) {
-      opacity: 0.7;
+    .payment-back-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
     }
   </style>
 </head>
 <body>
-
-  <!-- Backgrounds -->
-  <div class="bg-layer mexico active" id="bgMexico"></div>
-  <div class="bg-layer purple" id="bgPurple"></div>
 
   <!-- Navigation -->
   <nav class="nav">
@@ -1034,418 +939,369 @@
       <img src="Images/Icons/Logo.png" alt="Logo">
     </div>
     <div class="nav-links">
-      <a href="Order.html">Products</a>
+      <a href="Order.php">Products</a>
       <a href="Contact.html">Contact</a>
     </div>
     <div class="nav-right">
-      <button class="cart-btn" onclick="toggleCart()" aria-label="Shopping Cart">
-        <!-- FIXED: Using img tag instead of SVG -->
-        <img class="cart-icon" src="Images/Icons/basket.png" alt="Basket">
-        <span class="cart-badge" id="cartBadgeNav">0</span>
-      </button>
+      <a href="Order.php" class="place-order-btn">Place order →</a>
     </div>
   </nav>
 
-  <!-- Cart Sidebar -->
-  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-  <div class="cart-sidebar" id="cartSidebar">
-    <div class="cart-header">
-      <h2>Your Cart</h2>
-      <button class="cart-close" onclick="toggleCart()">&times;</button>
-    </div>
-    <div class="cart-body" id="cartBody">
-      <div class="cart-empty">
-        <div class="cart-empty-emoji">😢</div>
-        <p>Your basket is empty!</p>
-      </div>
-    </div>
-    <div class="cart-footer">
-      <div class="cart-total">
-        <span>Total:</span>
-        <span>$<span id="cartTotalPrice">0.00</span></span>
-      </div>
-      <button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()" disabled>
-        Continue to Checkout
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="content-wrapper">
-    <div class="layout-grid">
-      
-      <!-- Left -->
-      <div class="text-content">
-        <div class="text-slides-container" id="textSlidesContainer">
-          <div class="text-slide">
-            <h1>Mexico</h1>
-            <p>Originální příchuť která je zdaleka nejpopulárnější! Perfektně okořeněné hovězí maso které je nejuniverzálnější příchuť a chutná všem.</p>
+  <!-- Checkout Content -->
+  <div class="checkout-container">
+    <div class="checkout-wrapper">
+      <div class="checkout-grid">
+        
+        <!-- Order Summary -->
+        <div class="order-summary" id="orderSummary">
+          <h3>Order Summary</h3>
+          
+          <!-- Cart Items Grid -->
+          <div class="cart-items" id="cartItems">
+            <div class="cart-empty">No items in cart</div>
           </div>
-          <div class="text-slide">
-            <h1>Desperádo</h1>
-            <p>Příchuť Desperádo s bohatou a plnou chutí masa. Ideální pro ty, kteří hledají tradiční a autentický zážitek s dokonale vyvážeými kořením.</p>
+
+          <!-- Summary Section -->
+          <div class="summary-section" id="summarySection">
+            
+            <!-- Coupon Section -->
+            <?php if ($hasConnection): ?>
+            <div class="coupon-section">
+              <div id="appliedCoupon" style="display: none;"></div>
+              <div id="couponInputGroup" style="display: block;">
+                <div class="coupon-input-group">
+                  <input type="text" id="couponInput" class="coupon-input" placeholder="Coupon code">
+                  <button class="coupon-btn" onclick="applyCoupon()">Apply</button>
+                </div>
+                <div id="couponMessage" class="coupon-message"></div>
+              </div>
+            </div>
+            <?php else: ?>
+            <div class="coupon-section" style="opacity: 0.5; cursor: not-allowed;">
+              <div style="font-size: 0.85rem; color: #ffb74d;">
+                Coupon feature temporarily unavailable
+              </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Summary Rows -->
+            <div class="summary-rows">
+              <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value">$<span id="subtotal">0.00</span></span>
+              </div>
+              <div class="summary-row" id="discountRow" style="display: none;">
+                <span class="summary-label">Discount</span>
+                <span class="summary-value discount">-$<span id="discount">0.00</span></span>
+              </div>
+              <div class="summary-row" id="feeRow" style="display: none;">
+                <span class="summary-label">Payment Fee</span>
+                <span class="summary-value">$<span id="fee">0.00</span></span>
+              </div>
+              <div class="summary-row total">
+                <span class="summary-label">Total</span>
+                <span class="summary-value">$<span id="total">0.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <button class="checkout-btn" id="checkoutBtn" onclick="proceedToPayment()" disabled>Proceed to Checkout</button>
+        </div>
+
+        <!-- Payment Methods Section -->
+        <div class="payment-section" id="paymentSection">
+          <div class="payment-container">
+            <div class="payment-title">Select Payment Method</div>
+            
+            <div class="payment-methods">
+              <div class="payment-method" onclick="selectPayment('credit')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/credit-card.png" alt="Credit Card">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">Credit/Debit Card</span>
+                  <span class="payment-method-desc">Pay with Stripe (4% fee)</span>
+                </div>
+              </div>
+              <div class="payment-method" onclick="selectPayment('crypto')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/bitcoin.png" alt="Cryptocurrency">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">Cryptocurrency</span>
+                  <span class="payment-method-desc">BTC, ETH, LTC, SOL (1.5% fee)</span>
+                </div>
+              </div>
+              <div class="payment-method" onclick="selectPayment('paypal')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/paypal.png" alt="PayPal">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">PayPal</span>
+                  <span class="payment-method-desc">Friends & Family (2.5% fee)</span>
+                </div>
+              </div>
+            </div>
+
+            <button class="payment-back-btn" onclick="backToCheckout()">← Back to Order Summary</button>
           </div>
         </div>
       </div>
-
-      <!-- Center -->
-      <div class="center-content">
-        <div class="slides-container" id="slidesContainer">
-          <div class="product-slide" id="slide0">
-            <img src="Images/Flavors/MexicoPeppers.png" alt="Flavorings" class="flavorings-image">
-            <img src="Images/Flavors/Mexico.png" alt="Mexico Flavor" class="product-image">
-          </div>
-          <div class="product-slide" id="slide1">
-            <img src="Images/Flavors/MexicoPeppers.png" alt="Flavorings" class="flavorings-image">
-            <img src="Images/Flavors/Mexico.png" alt="Carne Flavor" class="product-image">
-          </div>
-        </div>
-      </div>
-
-      <!-- Right -->
-      <div class="right-content">
-        <div class="size-slides-container" id="sizeSlidesContainer">
-          <div class="size-slide">
-            <div class="size-selector">
-              <div class="size-btn active" data-group="1" data-size="25" data-price="12.99">25G</div>
-              <div class="size-btn" data-group="1" data-size="50" data-price="22.99">50G</div>
-              <div class="size-btn" data-group="1" data-size="100" data-price="39.99">100G</div>
-            </div>
-            <div class="animal-selector">
-              <button class="animal-btn active" data-group="1" data-animal="cow">
-                <img src="Images/Icons/cow.png" alt="Cow">
-              </button>
-              <button class="animal-btn" data-group="1" data-animal="turkey">
-                <img src="Images/Icons/turkey.png" alt="Turkey">
-              </button>
-              <button class="animal-btn" data-group="1" data-animal="pig">
-                <img src="Images/Icons/pig.png" alt="Pig">
-              </button>
-            </div>
-          </div>
-          <div class="size-slide">
-            <div class="size-selector">
-              <div class="size-btn active" data-group="2" data-size="25" data-price="12.99">25G</div>
-              <div class="size-btn" data-group="2" data-size="50" data-price="22.99">50G</div>
-              <div class="size-btn" data-group="2" data-size="100" data-price="39.99">100G</div>
-            </div>
-            <div class="animal-selector">
-              <button class="animal-btn active" data-group="2" data-animal="cow">
-                <img src="Images/Icons/cow.png" alt="Cow">
-              </button>
-              <button class="animal-btn" data-group="2" data-animal="turkey">
-                <img src="Images/Icons/turkey.png" alt="Turkey">
-              </button>
-              <button class="animal-btn" data-group="2" data-animal="pig">
-                <img src="Images/Icons/pig.png" alt="Pig">
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <div class="social-icons">
-      <a href="#" aria-label="Instagram">
-        <img src="https://cdnjs.cloudflare.com/ajax/libs/simple-icons/9.21.0/instagram.svg" alt="Instagram">
-      </a>
-      <a href="#" aria-label="Facebook">
-        <img src="https://cdnjs.cloudflare.com/ajax/libs/simple-icons/9.21.0/facebook.svg" alt="Facebook">
-      </a>
-      <a href="#" aria-label="Email">
-        <img src="https://cdnjs.cloudflare.com/ajax/libs/simple-icons/9.21.0/gmail.svg" alt="Email">
-      </a>
-      <a href="#" aria-label="Twitter">
-        <img src="https://cdnjs.cloudflare.com/ajax/libs/simple-icons/9.21.0/twitter.svg" alt="Twitter">
-      </a>
-    </div>
-    <div class="choose-size">
-      <span>Scroll for more</span>
-    </div>
-    <div class="footer-spacer"></div>
-    <button class="shop-now-btn" onclick="addToCart()">Add to Cart</button>
   </div>
 
   <script>
-    // Cookie helper functions
-    function setCookie(name, value, days) {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-      document.cookie = `${name}=${JSON.stringify(value)};expires=${expires.toUTCString()};path=/`;
-    }
+    // Configuration
+    const HAS_CONNECTION = <?php echo $hasConnection ? 'true' : 'false'; ?>;
 
-    function getCookie(name) {
-      const nameEQ = name + "=";
+    // Products Database
+    const products = {
+      'PROD_001': {
+        id: 'PROD_001',
+        name: 'Mexico',
+        image: 'Images/Flavors/Mexico.png'
+      },
+      'PROD_002': {
+        id: 'PROD_002',
+        name: 'Desperádo',
+        image: 'Images/Flavors/Mexico.png'
+      }
+    };
+
+    // State management
+    let cart = [];
+    let appliedCoupon = null;
+    let selectedPaymentMethod = null;
+
+    // DOM Elements
+    const cartItems = document.getElementById('cartItems');
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const couponInput = document.getElementById('couponInput');
+    const couponMessage = document.getElementById('couponMessage');
+    const paymentSection = document.getElementById('paymentSection');
+    const orderSummary = document.getElementById('orderSummary');
+    const feeEl = document.getElementById('fee');
+    const feeRow = document.getElementById('feeRow');
+
+    // Load cart from cookies
+    function loadCartFromCookies() {
+      const nameEQ = 'cart=';
       const ca = document.cookie.split(';');
       for (let i = 0; i < ca.length; i++) {
         let c = ca[i];
         while (c.charAt(0) === ' ') c = c.substring(1, c.length);
         if (c.indexOf(nameEQ) === 0) {
           try {
-            return JSON.parse(c.substring(nameEQ.length, c.length));
+            cart = JSON.parse(c.substring(nameEQ.length, c.length));
+            return;
           } catch (e) {
-            return null;
+            console.log('Error parsing cart cookie:', e);
           }
         }
       }
-      return null;
+      cart = [];
     }
 
-    // State management
-    let currentSlide = 0;
-    let cart = getCookie('cart') || [];
-    const slidesContainer = document.getElementById('slidesContainer');
-    const textSlidesContainer = document.getElementById('textSlidesContainer');
-    const sizeSlidesContainer = document.getElementById('sizeSlidesContainer');
-    const bgMexico = document.getElementById('bgMexico');
-    const bgPurple = document.getElementById('bgPurple');
-    
-    let isScrolling = false;
-    const isMobile = window.innerWidth <= 768;
-
-    const products = {
-      mexico: { name: 'Mexico', id: 'PROD_001' },
-      desperado: { name: 'Desperádo', id: 'PROD_002' }
-    };
-
-    // FIXED: Separate selection states for each slide
-    let slideSelections = {
-      0: {
-        flavor: 'mexico',
-        size: '25',
-        animal: 'cow',
-        price: 12.99
-      },
-      1: {
-        flavor: 'desperado',
-        size: '25',
-        animal: 'cow',
-        price: 12.99
-      }
-    };
-
-    // Slide switching
-    function switchSlide(index) {
-      if (index < 0 || index > 1) return;
-      
-      const slides = document.querySelectorAll('.product-slide');
-      
-      if (index === 1) {
-        slides[0].classList.add('zoom-out');
-        slides[1].classList.add('zoom-in');
-      } else {
-        slides[1].classList.add('zoom-out');
-        slides[0].classList.add('zoom-in');
-      }
-      
-      const translateY = -index * 150;
-      slidesContainer.style.transform = `translateY(${translateY}%)`;
-      
-      const textTranslateY = isMobile ? -index * 60 : -index * 500;
-      textSlidesContainer.style.transform = `translateY(${textTranslateY}px)`;
-      
-      const sizeTranslateY = isMobile ? -index * 140 : -index * 500;
-      sizeSlidesContainer.style.transform = `translateY(${sizeTranslateY}px)`;
-      
-      setTimeout(() => {
-        slides.forEach(slide => {
-          slide.classList.remove('zoom-out', 'zoom-in');
-        });
-      }, 500);
-      
-      if (index === 0) {
-        bgMexico.classList.add('active');
-        bgPurple.classList.remove('active');
-      } else {
-        bgMexico.classList.remove('active');
-        bgPurple.classList.add('active');
-      }
-      
-      currentSlide = index;
-    }
-
-    // Scroll events
-    window.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      if (isScrolling) return;
-      if (e.deltaY > 0 && currentSlide === 0) {
-        isScrolling = true;
-        switchSlide(1);
-        setTimeout(() => { isScrolling = false; }, 900);
-      } else if (e.deltaY < 0 && currentSlide === 1) {
-        isScrolling = true;
-        switchSlide(0);
-        setTimeout(() => { isScrolling = false; }, 900);
-      }
-    }, { passive: false });
-
-    window.addEventListener('keydown', (e) => {
-      if (isScrolling) return;
-      if (e.key === 'ArrowDown' && currentSlide === 0) {
-        isScrolling = true;
-        switchSlide(1);
-        setTimeout(() => { isScrolling = false; }, 900);
-      } else if (e.key === 'ArrowUp' && currentSlide === 1) {
-        isScrolling = true;
-        switchSlide(0);
-        setTimeout(() => { isScrolling = false; }, 900);
-      }
-    });
-
-    let touchStartY = 0;
-    window.addEventListener('touchstart', (e) => {
-      touchStartY = e.touches[0].clientY;
-    });
-
-    window.addEventListener('touchend', (e) => {
-      if (isScrolling) return;
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchStartY - touchEndY;
-      if (Math.abs(diff) > 50) {
-        if (diff > 0 && currentSlide === 0) {
-          isScrolling = true;
-          switchSlide(1);
-          setTimeout(() => { isScrolling = false; }, 900);
-        } else if (diff < 0 && currentSlide === 1) {
-          isScrolling = true;
-          switchSlide(0);
-          setTimeout(() => { isScrolling = false; }, 900);
-        }
-      }
-    });
-
-    // FIXED: Size button selection - updates correct slide
-    document.querySelectorAll('.size-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const group = btn.getAttribute('data-group');
-        const slideIndex = parseInt(group) - 1;
-        
-        document.querySelectorAll(`.size-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        slideSelections[slideIndex].size = btn.getAttribute('data-size');
-        slideSelections[slideIndex].price = parseFloat(btn.getAttribute('data-price'));
-      });
-    });
-
-    // FIXED: Animal button selection - updates correct slide
-    document.querySelectorAll('.animal-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const group = btn.getAttribute('data-group');
-        const slideIndex = parseInt(group) - 1;
-        
-        document.querySelectorAll(`.animal-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        slideSelections[slideIndex].animal = btn.getAttribute('data-animal');
-      });
-    });
-
-    // Cart functions
-    function toggleCart() {
-      const sidebar = document.getElementById('cartSidebar');
-      const overlay = document.getElementById('cartOverlay');
-      
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('active');
-    }
-
+    // Update Cart Display
     function updateCartDisplay() {
-      const cartBody = document.getElementById('cartBody');
-      const cartBadge = document.getElementById('cartBadgeNav');
-      const totalPrice = document.getElementById('cartTotalPrice');
-      const checkoutBtn = document.getElementById('checkoutBtn');
-      
-      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-      cartBadge.textContent = totalItems;
-      
       if (cart.length === 0) {
-        cartBody.innerHTML = `
-          <div class="cart-empty">
-            <div class="cart-empty-emoji">😢</div>
-            <p>Your basket is empty!</p>
-          </div>
-        `;
-        totalPrice.textContent = '0.00';
-        checkoutBtn.disabled = true;
+        cartItems.innerHTML = '<div class="cart-empty">No items in cart</div>';
       } else {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        totalPrice.textContent = total.toFixed(2);
-        checkoutBtn.disabled = false;
-        
-        cartBody.innerHTML = `
-          <div class="cart-items-list">
-            ${cart.map((item, index) => `
-              <div class="cart-item">
-                <div class="cart-item-image">
-                  <img src="Images/Icons/${item.animal}.png" alt="${item.animal}">
-                </div>
-                <div class="cart-item-details">
-                  <div class="cart-item-name">${item.productName}</div>
-                  <div class="cart-item-info">${item.animal.charAt(0).toUpperCase() + item.animal.slice(1)} • ${item.size}G • Qty: ${item.quantity}</div>
-                </div>
-                <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
-                <button class="cart-item-remove" onclick="removeFromCart(${index})">×</button>
+        cartItems.innerHTML = cart.map((item, index) => `
+          <div class="cart-item">
+            <div class="cart-item-image">
+              <img src="${products[item.productId]?.image || 'Images/Flavors/Mexico.png'}" alt="${item.productName}">
+            </div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.productName}</div>
+              <div class="cart-item-details">
+                <span>${item.animal.charAt(0).toUpperCase() + item.animal.slice(1)}</span>
+                <span>${item.size}G</span>
+                <span>Qty: ${item.quantity}</span>
               </div>
-            `).join('')}
+              <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+            </div>
+            <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove item">×</button>
           </div>
-        `;
-      }
-    }
-
-    // FIXED: Add to cart uses current slide's selection
-    function addToCart() {
-      const selection = slideSelections[currentSlide];
-      const product = products[selection.flavor];
-      
-      const cartItem = {
-        id: `${product.id}_${selection.animal}_${selection.size}`,
-        productId: product.id,
-        productName: product.name,
-        animal: selection.animal,
-        size: selection.size,
-        price: selection.price,
-        quantity: 1
-      };
-
-      const existingIndex = cart.findIndex(item => item.id === cartItem.id);
-      if (existingIndex >= 0) {
-        cart[existingIndex].quantity++;
-      } else {
-        cart.push(cartItem);
+        `).join('');
       }
 
-      setCookie('cart', cart, 7);
-      updateCartDisplay();
-
-      const btn = document.querySelector('.shop-now-btn');
-      btn.style.background = '#4CAF50';
-      btn.style.color = 'white';
-      btn.textContent = 'Added!';
-      
-      setTimeout(() => {
-        btn.style.background = 'white';
-        btn.style.color = '#000000';
-        btn.textContent = 'Add to Cart';
-      }, 1000);
+      updateOrderSummary();
     }
 
     function removeFromCart(index) {
       cart.splice(index, 1);
-      setCookie('cart', cart, 7);
+      saveCookieCart();
       updateCartDisplay();
     }
 
-    function goToCheckout() {
-      window.location.href = 'Order.php';
+    function saveCookieCart() {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000);
+      document.cookie = `cart=${JSON.stringify(cart)};expires=${expires.toUTCString()};path=/`;
+    }
+
+    // Coupon Functions
+    function applyCoupon() {
+      const code = couponInput.value.trim();
+      
+      if (!code) {
+        showCouponMessage('Please enter a coupon code', 'error');
+        return;
+      }
+
+      if (cart.length === 0) {
+        showCouponMessage('Add items to cart first', 'error');
+        return;
+      }
+
+      fetch('api/validate_coupon.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'code=' + encodeURIComponent(code)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.valid) {
+          appliedCoupon = {
+            code: data.couponCode,
+            type: data.discountType,
+            amount: data.amount
+          };
+          showCouponMessage('✓ ' + data.couponCode + ' applied!', 'success');
+          couponInput.value = '';
+          updateOrderSummary();
+          updateCouponDisplay();
+        } else {
+          showCouponMessage(data.message || 'Invalid coupon', 'error');
+          appliedCoupon = null;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showCouponMessage('Error applying coupon', 'error');
+      });
+    }
+
+    function removeCoupon() {
+      appliedCoupon = null;
+      couponInput.value = '';
+      couponMessage.textContent = '';
+      updateOrderSummary();
+      updateCouponDisplay();
+    }
+
+    function showCouponMessage(message, type) {
+      couponMessage.textContent = message;
+      couponMessage.className = `coupon-message ${type}`;
+    }
+
+    function updateCouponDisplay() {
+      const appliedCouponDiv = document.getElementById('appliedCoupon');
+      const couponInputGroup = document.getElementById('couponInputGroup');
+      
+      if (appliedCoupon) {
+        appliedCouponDiv.innerHTML = `
+          <div class="coupon-applied">
+            <span class="coupon-applied-text">${appliedCoupon.code}</span>
+            <button class="coupon-remove" onclick="removeCoupon()">Remove</button>
+          </div>
+        `;
+        appliedCouponDiv.style.display = 'block';
+        couponInputGroup.style.display = 'none';
+      } else {
+        appliedCouponDiv.style.display = 'none';
+        couponInputGroup.style.display = 'block';
+      }
+    }
+
+    // Order Summary
+    function updateOrderSummary() {
+      let subtotal = 0;
+      cart.forEach(item => {
+        subtotal += item.price * item.quantity;
+      });
+
+      let discount = 0;
+      if (appliedCoupon) {
+        if (appliedCoupon.type === 'percentage') {
+          discount = (subtotal * appliedCoupon.amount) / 100;
+        } else if (appliedCoupon.type === 'fixed') {
+          discount = appliedCoupon.amount;
+        }
+      }
+
+      const subtotalAfterDiscount = subtotal - discount;
+      const fee = selectedPaymentMethod ? subtotalAfterDiscount * (getPaymentFeePercentage(selectedPaymentMethod) / 100) : 0;
+      const total = subtotalAfterDiscount + fee;
+
+      subtotalEl.textContent = subtotal.toFixed(2);
+      
+      const discountRow = document.getElementById('discountRow');
+      if (discount > 0) {
+        document.getElementById('discount').textContent = discount.toFixed(2);
+        discountRow.style.display = 'flex';
+      } else {
+        discountRow.style.display = 'none';
+      }
+
+      if (fee > 0) {
+        feeEl.textContent = fee.toFixed(2);
+        feeRow.style.display = 'flex';
+      } else {
+        feeRow.style.display = 'none';
+      }
+
+      totalEl.textContent = total.toFixed(2);
+
+      checkoutBtn.disabled = cart.length === 0;
+    }
+
+    function getPaymentFeePercentage(method) {
+      const fees = {
+        'credit': 4,
+        'crypto': 1.5,
+        'paypal': 2.5
+      };
+      return fees[method] || 0;
+    }
+
+    // Payment Methods
+    function proceedToPayment() {
+      orderSummary.classList.add('hidden');
+      setTimeout(() => {
+        paymentSection.classList.add('active');
+      }, 350);
+    }
+
+    function backToCheckout() {
+      paymentSection.classList.remove('active');
+      setTimeout(() => {
+        orderSummary.classList.remove('hidden');
+      }, 350);
+    }
+
+    function selectPayment(method) {
+      selectedPaymentMethod = method;
+      updateOrderSummary();
+      alert(`Processing payment via ${method.toUpperCase()}...`);
+    }
+
+    // Coupon Enter Key
+    if (couponInput) {
+      couponInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          applyCoupon();
+        }
+      });
     }
 
     // Initialize
-    switchSlide(0);
+    loadCartFromCookies();
     updateCartDisplay();
   </script>
 </body>
