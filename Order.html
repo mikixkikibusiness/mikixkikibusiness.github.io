@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>Checkout - Suja Organic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      overscroll-behavior: none;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      width: 100vw;
+      background: linear-gradient(90deg, #4B2A1C 0%, #774734 50%, #4B2A1C 100%);
+      margin: 0;
+      padding: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      padding-top: env(safe-area-inset-top, 0);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      padding: 2rem clamp(1.5rem, 4vw, 4rem);
+      background: linear-gradient(180deg, 
+        rgba(75, 42, 28, 0.98) 0%, 
+        rgba(75, 42, 28, 0.95) 70%, 
+        rgba(75, 42, 28, 0.85) 90%, 
+        rgba(75, 42, 28, 0) 100%);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    .logo img {
+      height: clamp(75px, 7vw, 110px); /* Increased from 65-90px */
+      width: auto;
+      object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        justify-content: center;
+        padding: 1.5rem;
+        flex-shrink: 0;
+      }
+      
+      .logo {
+        flex: none;
+      }
+      
+      .logo img {
+        height: clamp(70px, 6.5vw, 100px); /* Bigger on mobile too */
+      }
+      
+      .nav-links,
+      .nav-right {
+        display: none;
+      }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: clamp(1rem, 2vw, 2.5rem);
+      color: white;
+      font-weight: 500;
+      flex: 1;
+      justify-content: center;
+      font-size: clamp(0.85rem, 1vw, 1rem);
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.7;
+    }
+
+    .nav-right {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .place-order-btn {
+      background: white;
+      color: #000000;
+      padding: 0.5rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform 0.3s;
+      font-size: clamp(0.85rem, 1vw, 1rem);
+      white-space: nowrap;
+    }
+
+    .place-order-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        justify-content: center;
+        padding: 1.5rem;
+        flex-shrink: 0;
+      }
+      
+      .logo {
+        flex: none;
+      }
+      
+      .nav-links,
+      .nav-right {
+        display: none;
+      }
+    }
+
+    /* Main Checkout Content */
+    .checkout-container {
+      flex: 1;
+      padding: 2rem clamp(1.5rem, 4vw, 4rem);
+      margin-top: 160px; /* Increased from 140px */
+      display: flex;
+      justify-content: center;
+      align-items: center; /* Changed from flex-start to center */
+      min-height: calc(100vh - 160px);
+    }
+
+    @media (max-width: 768px) {
+      .checkout-container {
+        margin-top: 140px; /* Increased from 120px */
+        padding: 1rem;
+        min-height: calc(100vh - 140px);
+      }
+    }
+
+    .checkout-grid {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-grid {
+        flex-direction: column;
+      }
+    }
+
+    .order-summary {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      color: white;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+      visibility: visible;
+      opacity: 1;
+      transform: scale(1);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0s;
+    }
+
+    .order-summary.hidden {
+      visibility: hidden;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0.35s;
+      pointer-events: none;
+    }
+        @media (max-width: 768px) {
+      .order-summary {
+        padding: 1.2rem;
+        border-radius: 20px;
+        max-width: 100%;
+      }
+    }
+
+    .order-summary h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .order-summary h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Cart Items Grid */
+    .cart-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex: 1;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .cart-items::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .cart-items::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .cart-items {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+        max-height: 350px;
+      }
+    }
+
+    .cart-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      opacity: 0.7;
+      padding: 2rem;
+      font-size: 1rem;
+    }
+
+    /* Cart Item Card */
+    .cart-item {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1rem;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .cart-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .cart-item {
+        padding: 0.75rem;
+      }
+    }
+
+    .cart-item-image {
+      width: 100%;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .cart-item-image {
+        height: 100px;
+      }
+    }
+
+    .cart-item-image img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .cart-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .cart-item-name {
+        font-size: 0.85rem;
+      }
+    }
+
+    .cart-item-details {
+      font-size: 0.8rem;
+      opacity: 0.75;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .cart-item-details span {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .cart-item-price {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .cart-item-price {
+        font-size: 0.85rem;
+      }
+    }
+
+    .cart-item-remove {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(255, 68, 68, 0.8);
+      color: white;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .cart-item-remove:hover {
+      background: #ff4444;
+      transform: scale(1.1);
+    }
+
+    /* Summary Section */
+    .summary-section {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .summary-section {
+        padding-top: 1rem;
+      }
+    }
+
+    .coupon-section {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .coupon-input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .coupon-input {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .coupon-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .coupon-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .coupon-btn {
+      padding: 0.6rem 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .coupon-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .coupon-message {
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .coupon-message.success {
+      color: #81c784;
+    }
+
+    .coupon-message.error {
+      color: #ef5350;
+    }
+
+    .coupon-applied {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: rgba(129, 199, 132, 0.2);
+      border: 1px solid rgba(129, 199, 132, 0.4);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+
+    .coupon-applied-text {
+      font-size: 0.9rem;
+      color: #81c784;
+    }
+
+    .coupon-remove {
+      background: none;
+      border: none;
+      color: #81c784;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.3s;
+    }
+
+    .coupon-remove:hover {
+      color: #ef5350;
+    }
+
+    .summary-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .summary-row {
+        padding: 0.6rem 0;
+        font-size: 0.85rem;
+      }
+    }
+
+    .summary-row.total {
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .summary-row.total {
+        font-size: 1.1rem;
+      }
+    }
+
+    .summary-label {
+      opacity: 0.9;
+    }
+
+    .summary-value {
+      font-weight: 600;
+    }
+
+    .summary-value.discount {
+      color: #81c784;
+    }
+
+    .checkout-btn {
+      background: white;
+      color: #000000;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+
+    .checkout-btn:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .checkout-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .checkout-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-btn {
+        padding: 0.9rem 1.5rem;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+      }
+    }
+
+
+    .payment-section {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 1.5rem;
+      color: white;
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0.35s;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      z-index: 99;
+    }
+
+    .payment-section.active {
+      visibility: visible;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0s linear 0s;
+    }
+
+    @media (max-width: 768px) {
+      .payment-section {
+        padding: 1rem;
+        max-width: 95%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      
+      .payment-section.active {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    .payment-container {
+      background: transparent;
+      backdrop-filter: none;
+      border-radius: 0;
+      padding: 0;
+      color: white;
+      text-align: center;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .payment-title {
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      font-weight: 700;
+      margin-bottom: clamp(1rem, 2vw, 1.5rem);
+      color: white;
+    }
+
+
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.9rem, 2vw, 1.1rem); /* Increased from 0.6-0.8rem */
+    }
+
+    .payment-method {
+      background: linear-gradient(135deg, #5b5bff 0%, #3f3fbf 100%);
+      border: none;
+      border-radius: 10px;
+      padding: clamp(0.75rem, 1.5vw, 1rem) clamp(0.9rem, 2vw, 1.2rem);
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: clamp(0.7rem, 1.5vw, 1rem);
+      font-weight: 600;
+      font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+      color: white;
+    }
+
+    .payment-method:nth-child(1) {
+      background: linear-gradient(135deg, #5b5bff 0%, #3f3fbf 100%);
+    }
+
+    .payment-method:nth-child(2) {
+      background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    }
+
+    .payment-method:nth-child(3) {
+      background: linear-gradient(135deg, #0052cc 0%, #003366 100%);
+    }
+
+    .payment-method:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .payment-method-icon {
+      width: clamp(40px, 6vw, 48px);
+      height: clamp(40px, 6vw, 48px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .payment-method-icon img {
+      width: clamp(28px, 4vw, 36px);
+      height: clamp(28px, 4vw, 36px);
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    .payment-method-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .payment-method-name {
+      font-size: clamp(0.9rem, 1.5vw, 1rem);
+      font-weight: 700;
+      display: block;
+      line-height: 1.2;
+    }
+
+    .payment-method-desc {
+      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      opacity: 0.9;
+      display: block;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .payment-back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: clamp(0.6rem, 1.2vw, 0.7rem) clamp(1rem, 1.8vw, 1.3rem);
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: clamp(1rem, 2vw, 1.5rem);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: clamp(0.8rem, 0.9vw, 0.9rem);
+    }
+
+    .payment-back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .checkout-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .checkout-grid {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      min-height: 500px;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-grid {
+        flex-direction: column;
+        align-items: center; /* Center on mobile */
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="logo">
+      <img src="Images/Icons/Logo.png" alt="Logo">
+    </div>
+    <div class="nav-links">
+      <a href="Order.html">Products</a>
+      <a href="Contact.html">Contact</a>
+    </div>
+    <div class="nav-right">
+      <a href="Order.html" class="place-order-btn">Place order →</a>
+    </div>
+  </nav>
+
+  <!-- Checkout Content -->
+  <div class="checkout-container">
+    <div class="checkout-wrapper">
+      <div class="checkout-grid">
+        
+        <!-- Order Summary -->
+        <div class="order-summary" id="orderSummary">
+          <h3>Order Summary</h3>
+          
+          <!-- Cart Items Grid -->
+          <div class="cart-items" id="cartItems">
+            <div class="cart-empty">No items in cart</div>
+          </div>
+
+          <!-- Summary Section -->
+          <div class="summary-section" id="summarySection">
+            
+            <!-- Coupon Section (always visible now) -->
+            <div class="coupon-section">
+              <div id="appliedCoupon" style="display: none;"></div>
+              <div id="couponInputGroup" style="display: block;">
+                <div class="coupon-input-group">
+                  <input type="text" id="couponInput" class="coupon-input" placeholder="Coupon code">
+                  <button class="coupon-btn" onclick="applyCoupon()">Apply</button>
+                </div>
+                <div id="couponMessage" class="coupon-message"></div>
+              </div>
+            </div>
+
+            <!-- Summary Rows -->
+            <div class="summary-rows">
+              <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value">$<span id="subtotal">0.00</span></span>
+              </div>
+              <div class="summary-row" id="discountRow" style="display: none;">
+                <span class="summary-label">Discount</span>
+                <span class="summary-value discount">-$<span id="discount">0.00</span></span>
+              </div>
+              <div class="summary-row" id="feeRow" style="display: none;">
+                <span class="summary-label">Payment Fee</span>
+                <span class="summary-value">$<span id="fee">0.00</span></span>
+              </div>
+              <div class="summary-row total">
+                <span class="summary-label">Total</span>
+                <span class="summary-value">$<span id="total">0.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <button class="checkout-btn" id="checkoutBtn" onclick="proceedToPayment()" disabled>Proceed to Checkout</button>
+        </div>
+
+        <!-- Payment Methods Section -->
+        <div class="payment-section" id="paymentSection">
+          <div class="payment-container">
+            <div class="payment-title">Select Payment Method</div>
+            
+            <div class="payment-methods">
+              <div class="payment-method" onclick="selectPayment('credit')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/credit-card.png" alt="Credit Card">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">Credit/Debit Card</span>
+                  <span class="payment-method-desc">Pay with Stripe (4% fee)</span>
+                </div>
+              </div>
+              <div class="payment-method" onclick="selectPayment('crypto')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/bitcoin.png" alt="Cryptocurrency">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">Cryptocurrency</span>
+                  <span class="payment-method-desc">BTC, ETH, LTC, SOL (1.5% fee)</span>
+                </div>
+              </div>
+              <div class="payment-method" onclick="selectPayment('paypal')">
+                <div class="payment-method-icon">
+                  <img src="Images/Icons/paypal.png" alt="PayPal">
+                </div>
+                <div class="payment-method-text">
+                  <span class="payment-method-name">PayPal</span>
+                  <span class="payment-method-desc">Friends & Family (2.5% fee)</span>
+                </div>
+              </div>
+            </div>
+
+            <button class="payment-back-btn" onclick="backToCheckout()">← Back to Order Summary</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration (removed PHP)
+    const HAS_CONNECTION = true;
+
+    // Products
+    const products = {
+      'PROD_001': {
+        id: 'PROD_001',
+        name: 'Mexico',
+        image: 'Images/Flavors/Mexico.png'
+      },
+      'PROD_002': {
+        id: 'PROD_002',
+        name: 'Desperádo',
+        image: 'Images/Flavors/Mexico.png'
+      }
+    };
+
+    // State
+    let cart = [];
+    let appliedCoupon = null;
+    let selectedPaymentMethod = null;
+
+    const cartItems = document.getElementById('cartItems');
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const couponInput = document.getElementById('couponInput');
+    const couponMessage = document.getElementById('couponMessage');
+    const paymentSection = document.getElementById('paymentSection');
+    const orderSummary = document.getElementById('orderSummary');
+    const feeEl = document.getElementById('fee');
+    const feeRow = document.getElementById('feeRow');
+
+    function loadCartFromCookies() {
+      const nameEQ = 'cart=';
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) {
+          try {
+            cart = JSON.parse(c.substring(nameEQ.length, c.length));
+            return;
+          } catch (e) {
+            console.log('Error parsing cart cookie:', e);
+          }
+        }
+      }
+      cart = [];
+    }
+
+    function updateCartDisplay() {
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<div class="cart-empty">No items in cart</div>';
+      } else {
+        cartItems.innerHTML = cart.map((item, index) => `
+          <div class="cart-item">
+            <div class="cart-item-image">
+              <img src="${products[item.productId]?.image || 'Images/Flavors/Mexico.png'}" alt="${item.productName}">
+            </div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.productName}</div>
+              <div class="cart-item-details">
+                <span>${item.animal.charAt(0).toUpperCase() + item.animal.slice(1)}</span>
+                <span>${item.size}G</span>
+                <span>Qty: ${item.quantity}</span>
+              </div>
+              <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+            </div>
+            <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove item">×</button>
+          </div>
+        `).join('');
+      }
+
+      updateOrderSummary();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      saveCookieCart();
+      updateCartDisplay();
+    }
+
+    function saveCookieCart() {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000);
+      document.cookie = `cart=${JSON.stringify(cart)};expires=${expires.toUTCString()};path=/`;
+    }
+
+    // Dummy coupon handler (no PHP backend)
+    function applyCoupon() {
+      const code = couponInput.value.trim();
+      if (!code) {
+        showCouponMessage('Please enter a coupon code', 'error');
+        return;
+      }
+
+      // No backend: always reject
+      showCouponMessage('Coupon feature unavailable in demo mode', 'error');
+    }
+
+    function showCouponMessage(msg, type) {
+      couponMessage.textContent = msg;
+      couponMessage.className = 'coupon-message ' + type;
+    }
+
+    function updateOrderSummary() {
+      let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      subtotalEl.textContent = subtotal.toFixed(2);
+      totalEl.textContent = subtotal.toFixed(2);
+      checkoutBtn.disabled = cart.length === 0;
+    }
+
+    function proceedToPayment() {
+      orderSummary.classList.add('hidden');
+      paymentSection.classList.add('active');
+    }
+
+    function backToCheckout() {
+      paymentSection.classList.remove('active');
+      orderSummary.classList.remove('hidden');
+    }
+
+    loadCartFromCookies();
+    updateCartDisplay();
+  </script>
+</body>
+</html>
