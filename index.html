@@ -6,6 +6,11 @@
 <title>Michael — Brands, products, and the software behind them</title>
 <meta name="description" content="Michael designs brands, builds products, and writes the software behind them.">
 <link rel="stylesheet" href="styles.css">
+<!-- Preload look-in screenshots so they're already cached by the time the
+     person scrolls to the work section. Update paths if filenames change. -->
+<link rel="preload" as="image" href="Assets/topcarne-fallback.png">
+<link rel="preload" as="image" href="Assets/sensoryrestore-fallback.png">
+<link rel="preload" as="image" href="Assets/spectre-fallback.png">
 </head>
 <body>
 
@@ -25,9 +30,12 @@
 
   <!-- ============================= HERO ============================= -->
   <section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-inner">
       <h1 class="hero-headline" id="hero-headline" aria-label="I build brands, products, and the software behind them.">
-        <!-- Words injected by script.js for word-by-word reveal -->
+        <!-- Words injected by script.js for word-by-word reveal.
+             script.js wraps the word matching data-accent-word in
+             .word-accent for the single-word color treatment. -->
       </h1>
       <p class="hero-subhead reveal">Independent designer, engineer and entrepreneur. I take projects from idea to production, alone.</p>
       <div class="hero-ctas reveal">
@@ -35,6 +43,9 @@
         <a href="#contact" class="btn btn-link">Get in touch <span class="chevron">›</span></a>
       </div>
     </div>
+    <a href="#philosophy" class="hero-scroll-cue reveal" aria-label="Scroll to learn more">
+      <span class="hero-scroll-cue-line"></span>
+    </a>
   </section>
 
   <!-- ============================= PHILOSOPHY (pinned) ============================= -->
@@ -68,8 +79,9 @@
             <span class="chrome-dot"></span>
             <span class="chrome-pill">topcarne.eu</span>
           </div>
-          <div class="lookin-viewport" data-src="https://topcarne.eu" data-fallback="Assets/topcarne-fallback.png">
+          <div class="lookin-viewport">
             <div class="lookin-placeholder"></div>
+            <img class="lookin-shot" src="Assets/topcarne-fallback.png" alt="Top Carne storefront preview" loading="lazy">
           </div>
           <a href="https://topcarne.eu" target="_blank" rel="noopener" class="lookin-overlay">
             <span class="btn btn-primary">Visit Site</span>
@@ -100,8 +112,9 @@
             <span class="chrome-dot"></span>
             <span class="chrome-pill">sensoryrestore.com</span>
           </div>
-          <div class="lookin-viewport" data-src="https://sensoryrestore.com" data-fallback="Assets/sensoryrestore-fallback.png">
+          <div class="lookin-viewport">
             <div class="lookin-placeholder"></div>
+            <img class="lookin-shot" src="Assets/sensoryrestore-fallback.png" alt="Sensory Restore storefront preview" loading="lazy">
           </div>
           <a href="https://sensoryrestore.com" target="_blank" rel="noopener" class="lookin-overlay">
             <span class="btn btn-primary">Visit Site</span>
@@ -132,8 +145,9 @@
             <span class="chrome-dot"></span>
             <span class="chrome-pill">https://spectrerecovery.xyz</span>
           </div>
-          <div class="lookin-viewport" data-src="https://spectrerecovery.xyz" data-fallback="Assets/spectre-fallback.png">
+          <div class="lookin-viewport">
             <div class="lookin-placeholder"></div>
+            <img class="lookin-shot" src="Assets/spectre-fallback.png" alt="Spectre desktop client and dashboard preview" loading="lazy">
           </div>
           <a href="https://spectrerecovery.xyz" target="_blank" rel="noopener" class="lookin-overlay">
             <span class="btn btn-primary">Visit Site</span>
