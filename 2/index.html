@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Michael — Builder of Brands, Products &amp; Software</title>
+  <meta name="description" content="Michael builds and ships brands, products, and the software behind them — end to end." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ PAGE LOADER (max 800ms, non-blocking) ============ -->
+  <div class="loader" id="loader" aria-hidden="true">
+    <span class="loader__name">Michael</span>
+  </div>
+
+  <!-- ============ CUSTOM CURSOR (desktop only) ============ -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <a href="#hero" class="nav__logo" data-scroll-to>Michael</a>
+    <nav class="nav__links" id="navLinks">
+      <span class="nav__indicator" id="navIndicator"></span>
+      <a href="#approach" class="nav__link" data-scroll-to>Approach</a>
+      <a href="#work" class="nav__link" data-scroll-to>Work</a>
+      <a href="#unreleased" class="nav__link" data-scroll-to>Unreleased</a>
+      <a href="#more" class="nav__link" data-scroll-to>More</a>
+      <a href="#contact" class="nav__link nav__link--cta" data-scroll-to>Contact</a>
+    </nav>
+  </header>
+
+  <main id="smooth-content">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero" data-section="hero">
+      <div class="hero__bg" id="heroBg" aria-hidden="true">
+        <div class="hero__blob hero__blob--1"></div>
+        <div class="hero__blob hero__blob--2"></div>
+        <div class="hero__blob hero__blob--3"></div>
+      </div>
+      <div class="hero__inner">
+        <p class="hero__eyebrow reveal-load" style="--d:.15s">Entrepreneur · Builder · Engineer</p>
+        <h1 class="hero__headline">
+          <span class="hero__line"><span class="reveal-load" style="--d:.25s">Michael —</span></span>
+          <span class="hero__line"><span class="reveal-load" style="--d:.35s">I build brands, products,</span></span>
+          <span class="hero__line"><span class="reveal-load" style="--d:.45s">and the software</span></span>
+          <span class="hero__line"><span class="reveal-load" style="--d:.55s">behind them.</span></span>
+        </h1>
+        <p class="hero__sub reveal-load" style="--d:.7s">
+          Turning ideas into shipped, revenue-generating products — across
+          e-commerce, consumer brands, and software tooling.
+        </p>
+        <div class="hero__actions reveal-load" style="--d:.85s">
+          <a href="#work" class="btn btn--primary magnetic" data-scroll-to>See the work</a>
+          <a href="#contact" class="btn btn--ghost magnetic" data-scroll-to>Get in touch</a>
+        </div>
+      </div>
+      <div class="hero__scroll-hint reveal-load" style="--d:1.1s" aria-hidden="true">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- ============ INTRO / APPROACH (pinned) ============ -->
+    <section class="approach" id="approach" data-section="approach">
+      <div class="approach__sticky">
+        <div class="approach__stage" id="approachStage">
+          <p class="approach__statement is-active" data-step="0">
+            Build fast. Ship real.
+          </p>
+          <p class="approach__statement" data-step="1">
+            Own the full stack — brand, product, code.
+          </p>
+          <p class="approach__statement" data-step="2">
+            Real businesses, not prototypes.
+          </p>
+        </div>
+        <p class="approach__caption reveal">
+          Every project below was taken from idea to operating business — positioning,
+          product, storefront, and software, built end-to-end by one person.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ LIVE SITE SHOWCASES ============ -->
+    <section class="showcases" id="work" data-section="work">
+
+      <!-- Project 1: Top Carne -->
+      <article class="showcase showcase--dark">
+        <div class="showcase__copy">
+          <p class="showcase__eyebrow reveal">Live · E-Commerce</p>
+          <h2 class="showcase__title reveal" style="--d:.08s">Top Carne</h2>
+          <p class="showcase__desc reveal" style="--d:.16s">
+            Premium dried-meat brand with a full custom e-commerce build: a PHP
+            storefront, Stripe + Packeta checkout, multilingual content, and an
+            interactive store-locator map for retail distribution points — all
+            wrapped in a dark espresso design system.
+          </p>
+          <ul class="showcase__stats reveal" style="--d:.24s">
+            <li>Multilingual</li>
+            <li>Stripe + Packeta</li>
+            <li>Custom store locator</li>
+          </ul>
+          <a class="btn btn--primary magnetic reveal" style="--d:.32s"
+             href="https://topcarne.eu" target="_blank" rel="noopener">Visit Site ↗</a>
+        </div>
+
+        <!-- Look-In Embed Component -->
+        <div class="lookin reveal-scale" data-url="https://topcarne.eu">
+          <div class="lookin__frame" data-tilt>
+            <div class="lookin__chrome">
+              <span class="lookin__dot lookin__dot--r"></span>
+              <span class="lookin__dot lookin__dot--y"></span>
+              <span class="lookin__dot lookin__dot--g"></span>
+              <span class="lookin__url">topcarne.eu</span>
+            </div>
+            <div class="lookin__viewport">
+              <!-- Fallback screenshot — REPLACE with real asset: [SCREENSHOT PATH: topcarne] -->
+              <div class="lookin__fallback" style="background-image:url('assets/topcarne-fallback.jpg')"></div>
+              <iframe class="lookin__iframe" data-src="https://topcarne.eu"
+                      title="Top Carne live site preview" loading="lazy"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                      referrerpolicy="no-referrer"></iframe>
+              <a class="lookin__overlay" href="https://topcarne.eu" target="_blank"
+                 rel="noopener" aria-label="Visit topcarne.eu">
+                <span class="lookin__visit">Visit Site ↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project 2: Sensory Restore -->
+      <article class="showcase showcase--light showcase--flip">
+        <div class="showcase__copy">
+          <p class="showcase__eyebrow reveal">Live · DTC Brand</p>
+          <h2 class="showcase__title reveal" style="--d:.08s">Sensory Restore</h2>
+          <p class="showcase__desc reveal" style="--d:.16s">
+            Sleep &amp; wellness DTC brand built and scaled for the US market on
+            Shopify. Positioning, creative, and paid acquisition all built
+            in-house — from first ad to repeat purchase.
+          </p>
+          <ul class="showcase__stats reveal" style="--d:.24s">
+            <li>Shopify</li>
+            <li>US Market</li>
+            <li>In-house creative + paid</li>
+          </ul>
+          <a class="btn btn--primary magnetic reveal" style="--d:.32s"
+             href="https://sensoryrestore.com" target="_blank" rel="noopener">Visit Site ↗</a>
+        </div>
+
+        <!-- Look-In Embed Component -->
+        <div class="lookin reveal-scale" data-url="https://sensoryrestore.com">
+          <div class="lookin__frame" data-tilt>
+            <div class="lookin__chrome">
+              <span class="lookin__dot lookin__dot--r"></span>
+              <span class="lookin__dot lookin__dot--y"></span>
+              <span class="lookin__dot lookin__dot--g"></span>
+              <span class="lookin__url">sensoryrestore.com</span>
+            </div>
+            <div class="lookin__viewport">
+              <!-- Fallback screenshot — REPLACE with real asset: [SCREENSHOT PATH: sensoryrestore] -->
+              <div class="lookin__fallback" style="background-image:url('assets/sensoryrestore-fallback.jpg')"></div>
+              <iframe class="lookin__iframe" data-src="https://sensoryrestore.com"
+                      title="Sensory Restore live site preview" loading="lazy"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                      referrerpolicy="no-referrer"></iframe>
+              <a class="lookin__overlay" href="https://sensoryrestore.com" target="_blank"
+                 rel="noopener" aria-label="Visit sensoryrestore.com">
+                <span class="lookin__visit">Visit Site ↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============ UNRELEASED PROJECTS ============ -->
+    <section class="unreleased" id="unreleased" data-section="unreleased">
+      <header class="section-head">
+        <p class="section-head__eyebrow reveal">In the lab</p>
+        <h2 class="section-head__title reveal" style="--d:.08s">Unreleased.</h2>
+        <p class="section-head__sub reveal" style="--d:.16s">
+          Two products currently in development — not public yet, but very real.
+        </p>
+      </header>
+
+      <div class="unreleased__grid">
+
+        <!-- YouTube Showcase Component — Reeview -->
+        <article class="yt-card reveal-scale" data-video-id="[REEVIEW_YOUTUBE_ID]">
+          <div class="yt-card__screen">
+            <span class="badge">Unreleased — In Development</span>
+            <button class="yt-card__poster" type="button" aria-label="Play Reeview preview video">
+              <!-- Optional custom poster: [POSTER PATH: reeview] — remove if unused -->
+              <span class="yt-card__play" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="yt-card__body">
+            <h3 class="yt-card__title">Reeview</h3>
+            <p class="yt-card__desc">
+              NFC-powered review collection for hospitality venues — tap-card →
+              Google review flow, plus a SaaS analytics dashboard for venue owners.
+              React frontend, Supabase backend.
+            </p>
+            <ul class="tags"><li>SaaS</li><li>NFC</li><li>React · Supabase</li></ul>
+          </div>
+        </article>
+
+        <!-- YouTube Showcase Component — NitroSnipe -->
+        <article class="yt-card yt-card--alt reveal-scale" style="--d:.12s" data-video-id="[NITROSNIPE_YOUTUBE_ID]">
+          <div class="yt-card__screen">
+            <span class="badge badge--alt">Unreleased — In Development</span>
+            <button class="yt-card__poster" type="button" aria-label="Play NitroSnipe preview video">
+              <!-- Optional custom poster: [POSTER PATH: nitrosnipe] — remove if unused -->
+              <span class="yt-card__play" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="yt-card__body">
+            <h3 class="yt-card__title">NitroSnipe</h3>
+            <p class="yt-card__desc">
+              Real-time monitoring dashboard for Discord Nitro drops — built for
+              speed. A low-latency data pipeline feeding a clean, live-updating UI.
+            </p>
+            <ul class="tags"><li>Real-Time</li><li>Tooling</li><li>Low-Latency</li></ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ ADDITIONAL PROJECTS GRID ============ -->
+    <section class="more" id="more" data-section="more">
+      <header class="section-head">
+        <p class="section-head__eyebrow reveal">Supporting work</p>
+        <h2 class="section-head__title reveal" style="--d:.08s">More shipped things.</h2>
+      </header>
+
+      <div class="more__grid">
+        <article class="card reveal">
+          <h3 class="card__title">Spectre</h3>
+          <p class="card__desc">
+            Full-stack subscription licensing platform — PHP backend with Argon2id
+            auth + HMAC-signed API, Discord OAuth2, tiered plans, admin analytics,
+            and a C++ desktop client with a native Direct3D 11 GUI.
+          </p>
+          <ul class="tags"><li>Full-Stack</li><li>PHP · C++</li><li>Licensing</li></ul>
+        </article>
+
+        <!-- Optional case-study chips — REPLACE hrefs/text or delete: [CHIP LINKS] -->
+        <a class="card card--chip reveal" style="--d:.08s" href="#" target="_blank" rel="noopener">
+          <h3 class="card__title">[Past Tool / Landing Page]</h3>
+          <p class="card__desc">One-line description of a smaller shipped tool or campaign page.</p>
+          <ul class="tags"><li>Landing</li><li>Shipped</li></ul>
+        </a>
+        <a class="card card--chip reveal" style="--d:.16s" href="#" target="_blank" rel="noopener">
+          <h3 class="card__title">[Past Tool / Landing Page]</h3>
+          <p class="card__desc">One-line description of a smaller shipped tool or campaign page.</p>
+          <ul class="tags"><li>Tool</li><li>Shipped</li></ul>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER / CONTACT ============ -->
+    <footer class="footer" id="contact" data-section="contact">
+      <div class="footer__inner reveal">
+        <h2 class="footer__title">Let’s build the next one.</h2>
+        <p class="footer__line">Michael — brands, products, and the software behind them.</p>
+        <div class="footer__contact">
+          <!-- REPLACE with real contact details: [CONTACT EMAIL] / [SOCIAL LINKS] -->
+          <a class="btn btn--primary magnetic" href="mailto:hello@example.com">hello@example.com</a>
+          <div class="footer__socials">
+            <a href="#" target="_blank" rel="noopener">GitHub</a>
+            <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="#" target="_blank" rel="noopener">X</a>
+          </div>
+        </div>
+        <p class="footer__legal">© <span id="year"></span> Michael. Built by hand — no frameworks.</p>
+      </div>
+    </footer>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
