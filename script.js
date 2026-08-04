@@ -1,370 +1,295 @@
-/* ==========================================================================
-   Michael — Apple-Style Portfolio
-   Vanilla JS. Everything hand-rolled:
-   lerp smooth-scroll · IntersectionObserver reveals · pinned approach ·
-   magnetic buttons · custom cursor · 3D Look-In tilt · YouTube facades ·
-   iframe fallback detection · nav indicator.
-   All scroll/mousemove work is rAF-gated.
-   ========================================================================== */
 (() => {
   'use strict';
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const finePointer  = window.matchMedia('(pointer: fine)').matches;
-
-  const $  = (s, c = document) => c.querySelector(s);
-  const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-  const lerp  = (a, b, t) => a + (b - a) * t;
 
-  $('#year').textContent = new Date().getFullYear();
+  /* ==========================================================================
+     CUSTOM CURSOR
+     ========================================================================== */
+  const cursor = document.getElementById('cursorDot');
+  if (cursor && !prefersReduced) {
+    let cx = 0, cy = 0, tx = 0, ty = 0;
 
-  /* ========================================================================
-     1. Custom lerp smooth-scroll ("weighted" Apple feel)
-     A tall spacer keeps the document height; #smooth-content is fixed and
-     translated by the interpolated scroll position each frame.
-     ======================================================================== */
-  const content = $('#smooth-content');
-  let spacer = null;
-  let currentScroll = window.scrollY;
-  let targetScroll  = window.scrollY;
-  let scrollRafId   = null;
-
-  if (!reduceMotion) {
-    spacer = document.createElement('div');
-    spacer.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(spacer);
-
-    const setHeights = () => {
-      spacer.style.height = content.offsetHeight + 'px';
-      document.body.style.overflow = 'hidden';
-      content.style.position = 'fixed';
-      content.style.top = '0';
-      content.style.left = '0';
-      content.style.width = '100%';
-      content.style.willChange = 'transform';
-    };
-    setHeights();
-
-    // Recalculate after fonts/iframes settle and on resize
-    window.addEventListener('resize', setHeights);
-    window.addEventListener('load', setHeights);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(setHeights);
-
-    const maxScroll = () => Math.max(0, content.offsetHeight - window.innerHeight);
-
-    window.addEventListener('scroll', () => {
-      targetScroll = clamp(window.scrollY, 0, maxScroll());
-      if (scrollRafId === null) scrollRafId = requestAnimationFrame(tickScroll);
+    window.addEventListener('mousemove', (e) => {
+      tx = e.clientX;
+      ty = e.clientY;
+      cursor.classList.add('is-active');
     }, { passive: true });
 
-    function tickScroll() {
-      currentScroll = lerp(currentScroll, targetScroll, 0.1); // weight
-      if (Math.abs(targetScroll - currentScroll) < 0.1) {
-        currentScroll = targetScroll;
-        content.style.transform = `translate3d(0, ${-currentScroll}px, 0)`;
-        scrollRafId = null;
-        onScrollFrame();
-        return;
-      }
-      content.style.transform = `translate3d(0, ${-currentScroll}px, 0)`;
-      onScrollFrame();
-      scrollRafId = requestAnimationFrame(tickScroll);
-    }
-
-    // Anchor links: animate the real scroll position so the lerp picks it up
-    $$('[data-scroll-to]').forEach(link => {
-      link.addEventListener('click', e => {
-        const target = $(link.getAttribute('href'));
-        if (!target) return;
-        e.preventDefault();
-        const y = target.getBoundingClientRect().top + currentScroll;
-        window.scrollTo(0, clamp(y, 0, maxScroll()));
-      });
-    });
-  } else {
-    // Reduced motion: native smooth anchor scrolling only
-    document.documentElement.style.scrollBehavior = 'smooth';
-  }
-
-  const getScrollY = () => (reduceMotion ? window.scrollY : currentScroll);
-
-  /* ========================================================================
-     2. IntersectionObserver — staggered reveals (60–100ms via inline --d)
-     ======================================================================== */
-  const revealIO = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        revealIO.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
-
-  $$('.reveal, .reveal-scale').forEach(el => revealIO.observe(el));
-
-  /* ========================================================================
-     3. Nav — frosted state + sliding active-section indicator
-     ======================================================================== */
-  const nav = $('#nav');
-  const indicator = $('#navIndicator');
-  const navLinks = $$('.nav__link');
-  const sectionByLink = new Map();
-  navLinks.forEach(link => {
-    const sec = $(link.getAttribute('href'));
-    if (sec) sectionByLink.set(sec, link);
-  });
-
-  const sectionIO = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      const link = sectionByLink.get(entry.target);
-      if (!link) return;
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('is-active'));
-        link.classList.add('is-active');
-        moveIndicator(link);
-      }
-    });
-  }, { rootMargin: '-40% 0px -55% 0px' });
-
-  sectionByLink.forEach((_, sec) => sectionIO.observe(sec));
-
-  function moveIndicator(link) {
-    if (!link || link.classList.contains('nav__link--cta')) {
-      indicator.classList.remove('is-visible');
-      return;
-    }
-    const parent = link.parentElement.getBoundingClientRect();
-    const rect = link.getBoundingClientRect();
-    indicator.style.width = rect.width + 'px';
-    indicator.style.transform = `translateX(${rect.left - parent.left}px)`;
-    indicator.classList.add('is-visible');
-  }
-
-  /* ========================================================================
-     4. Pinned approach — text swap driven by scroll progress in section
-     ======================================================================== */
-  const approach = $('.approach');
-  const statements = $$('.approach__statement');
-  let activeStep = 0;
-
-  function updateApproach() {
-    if (!approach || reduceMotion) return;
-    const rect = approach.getBoundingClientRect();
-    const scrollable = rect.height - window.innerHeight;
-    if (scrollable <= 0) return;
-    const progress = clamp(-rect.top / scrollable, 0, 1);
-    const step = Math.min(statements.length - 1, Math.floor(progress * statements.length));
-    if (step !== activeStep) {
-      activeStep = step;
-      statements.forEach(s => s.classList.toggle('is-active', +s.dataset.step === step));
-    }
-  }
-
-  /* ========================================================================
-     5. Parallax — hero background at ~0.25x scroll rate
-     ======================================================================== */
-  const heroBg = $('#heroBg');
-  function updateParallax() {
-    if (!heroBg || reduceMotion) return;
-    const y = getScrollY();
-    if (y < window.innerHeight * 1.2) {
-      heroBg.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
-    }
-  }
-
-  /* Shared per-scroll-frame hook (called from the lerp loop and natively) */
-  function onScrollFrame() {
-    nav.classList.toggle('is-scrolled', getScrollY() > 24);
-    updateApproach();
-    updateParallax();
-  }
-
-  if (reduceMotion) {
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => { onScrollFrame(); ticking = false; });
-      }
-    }, { passive: true });
-  }
-  onScrollFrame();
-
-  /* ========================================================================
-     6. Hero mouse parallax — blobs drift gently toward cursor (≤0.4x feel)
-     ======================================================================== */
-  if (finePointer && !reduceMotion) {
-    const hero = $('#hero');
-    const blobs = $$('.hero__blob');
-    let mx = 0, my = 0, cx = 0, cy = 0, heroRaf = null;
-
-    hero.addEventListener('mousemove', e => {
-      mx = (e.clientX / window.innerWidth  - 0.5);
-      my = (e.clientY / window.innerHeight - 0.5);
-      if (heroRaf === null) heroRaf = requestAnimationFrame(tickHero);
-    }, { passive: true });
-
-    function tickHero() {
-      cx = lerp(cx, mx, 0.06);
-      cy = lerp(cy, my, 0.06);
-      blobs.forEach((b, i) => {
-        const depth = 18 + i * 12; // px, subtle
-        b.style.translate = `${cx * depth}px ${cy * depth}px`;
-      });
-      if (Math.abs(cx - mx) > 0.001 || Math.abs(cy - my) > 0.001) {
-        heroRaf = requestAnimationFrame(tickHero);
-      } else heroRaf = null;
-    }
-  }
-
-  /* ========================================================================
-     7. Magnetic buttons — pull toward cursor inside bounds, spring back
-     ======================================================================== */
-  if (finePointer && !reduceMotion) {
-    $$('.magnetic').forEach(btn => {
-      const strength = 0.3, maxPull = 10;
-      btn.addEventListener('mousemove', e => {
-        const r = btn.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
-        btn.style.transition = 'none';
-        btn.style.transform =
-          `translate(${clamp(dx * strength, -maxPull, maxPull)}px,
-                     ${clamp(dy * strength, -maxPull, maxPull)}px)`;
-      }, { passive: true });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transition = 'transform .5s cubic-bezier(0.16, 1, 0.3, 1)';
-        btn.style.transform = 'translate(0, 0)';
-      });
-    });
-  }
-
-  /* ========================================================================
-     8. Custom cursor — dot that scales/inverts over interactive elements
-     ======================================================================== */
-  if (finePointer && !reduceMotion) {
-    document.body.classList.add('has-cursor');
-    const cursor = $('#cursor');
-    let tx = -100, ty = -100, x = tx, y = ty;
-
-    document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; }, { passive: true });
-    document.addEventListener('mouseover', e => {
-      cursor.classList.toggle('is-active',
-        !!e.target.closest('a, button, .yt-card__poster, .lookin__overlay'));
+    document.querySelectorAll('a, button, [data-lookin], [data-video]').forEach((el) => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('is-hovering'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('is-hovering'));
     });
 
-    (function tickCursor() {
-      x = lerp(x, tx, 0.2);
-      y = lerp(y, ty, 0.2);
-      cursor.style.left = x + 'px';
-      cursor.style.top  = y + 'px';
-      requestAnimationFrame(tickCursor);
+    (function cursorTick() {
+      cx = lerp(cx, tx, 0.22);
+      cy = lerp(cy, ty, 0.22);
+      cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
+      requestAnimationFrame(cursorTick);
     })();
   }
 
-  /* ========================================================================
-     9. Look-In embeds — lazy iframe load, fallback detection, 3D tilt
-     ======================================================================== */
-  const FRAME_TIMEOUT = 6000; // ms before assuming the site blocks framing
+  /* ==========================================================================
+     SCROLL PROGRESS + NAV STATE
+     ========================================================================== */
+  const progressBar = document.getElementById('scrollProgress');
+  const nav = document.getElementById('nav');
+  const navLinks = document.querySelectorAll('[data-nav-link]');
 
-  $$('.lookin').forEach((lookin, i) => {
-    const iframe  = $('.lookin__iframe', lookin);
-    const frame   = $('.lookin__frame', lookin);
-    const url     = lookin.dataset.url;
+  function updateScrollChrome() {
+    const doc = document.documentElement;
+    const scrollTop = window.scrollY;
+    const max = doc.scrollHeight - doc.clientHeight;
+    const pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    if (progressBar) progressBar.style.width = pct.toFixed(2) + '%';
+    if (nav) nav.classList.toggle('is-scrolled', scrollTop > 40);
+    updateApproachProgress();
+  }
 
-    // Lazy-load the iframe only when the component nears the viewport
-    const loadIO = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        loadIO.disconnect();
-        let loaded = false;
-
-        iframe.addEventListener('load', () => { loaded = true; }, { once: true });
-        iframe.src = iframe.dataset.src;
-
-        // X-Frame-Options/CSP blocks produce no usable load — fall back
-        setTimeout(() => {
-          if (!loaded) lookin.classList.add('has-failed');
-        }, FRAME_TIMEOUT + i * 500);
-
-        // A blocked frame often fires `load` with an error page; if the
-        // browser exposes it as inaccessible/blank we still treat it as ok
-        // (same-origin checks are impossible cross-domain — timeout is the
-        // reliable signal). Screenshot fallback stays as the safety net.
+  let scrollTicking = false;
+  window.addEventListener('scroll', () => {
+    if (!scrollTicking) {
+      requestAnimationFrame(() => {
+        updateScrollChrome();
+        scrollTicking = false;
       });
-    }, { rootMargin: '300px' });
-    loadIO.observe(lookin);
+      scrollTicking = true;
+    }
+  }, { passive: true });
 
-    // 3D tilt on mouse move (max ~7deg), spring back on leave
-    if (finePointer && !reduceMotion) {
-      let raf = null, rx = 0, ry = 0, trx = 0, try_ = 0;
+  /* Active nav link tracking */
+  const navMap = new Map();
+  navLinks.forEach((link) => {
+    const id = link.getAttribute('href').replace('#', '');
+    navMap.set(id, link);
+  });
+  const navSectionEls = Array.from(navMap.keys())
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
 
-      frame.addEventListener('mousemove', e => {
-        const r = frame.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width  - 0.5;
-        const py = (e.clientY - r.top)  / r.height - 0.5;
-        try_ = px * 7;          // rotateY
-        trx  = -py * 7;         // rotateX
-        if (raf === null) raf = requestAnimationFrame(tickTilt);
-      }, { passive: true });
-
-      frame.addEventListener('mouseleave', () => {
-        trx = 0; try_ = 0;
-        if (raf === null) raf = requestAnimationFrame(tickTilt);
+  if (navSectionEls.length) {
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          navLinks.forEach((l) => l.classList.remove('is-active'));
+          const link = navMap.get(entry.target.id);
+          if (link) link.classList.add('is-active');
+        }
       });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+    navSectionEls.forEach((el) => navObserver.observe(el));
+  }
 
-      function tickTilt() {
+  /* ==========================================================================
+     APPROACH — PINNED, SCROLL-LINKED STATEMENT
+     ========================================================================== */
+  const approachSection = document.getElementById('approach');
+  const approachSegs = document.querySelectorAll('.approach-seg');
+
+  function updateApproachProgress() {
+    if (!approachSection || !approachSegs.length) return;
+    const rect = approachSection.getBoundingClientRect();
+    const total = rect.height - window.innerHeight;
+    if (total <= 0) return;
+    const progress = clamp(-rect.top / total, 0, 1);
+    approachSegs.forEach((seg) => {
+      const from = parseFloat(seg.dataset.progressFrom);
+      const to = parseFloat(seg.dataset.progressTo);
+      const local = clamp((progress - from) / (to - from), 0, 1);
+      seg.style.opacity = (0.25 + local * 0.75).toFixed(3);
+    });
+  }
+
+  /* ==========================================================================
+     SCROLL REVEALS (IntersectionObserver)
+     ========================================================================== */
+  const revealEls = document.querySelectorAll('.reveal-up:not([data-delay])');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+  revealEls.forEach((el) => revealObserver.observe(el));
+
+  /* ==========================================================================
+     HERO ENTRANCE (staggered, runs once on load — not scroll-triggered
+     since the hero is already in view)
+     ========================================================================== */
+  function heroEntrance() {
+    const eyebrow = document.querySelector('.hero .eyebrow');
+    const words = document.querySelectorAll('.hero-word');
+    const sub = document.querySelector('.hero-sub');
+    const cta = document.querySelector('.hero .btn');
+
+    if (eyebrow) setTimeout(() => eyebrow.classList.add('is-visible'), 150);
+    words.forEach((w, i) => setTimeout(() => w.classList.add('is-visible'), 420 + i * 55));
+    const wordsEnd = 420 + words.length * 55;
+    if (sub) setTimeout(() => sub.classList.add('is-visible'), wordsEnd + 250);
+    if (cta) setTimeout(() => cta.classList.add('is-visible'), wordsEnd + 500);
+  }
+  requestAnimationFrame(() => setTimeout(heroEntrance, 80));
+
+  /* ==========================================================================
+     HERO BACKGROUND PARALLAX (mouse-reactive, lerped)
+     ========================================================================== */
+  const heroSection = document.getElementById('hero');
+  const heroBg = document.getElementById('heroBg');
+  if (heroSection && heroBg && !prefersReduced) {
+    let mx = 0, my = 0, tmx = 0, tmy = 0;
+    heroSection.addEventListener('mousemove', (e) => {
+      const rect = heroSection.getBoundingClientRect();
+      tmx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      tmy = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    });
+    (function heroParallaxTick() {
+      mx = lerp(mx, tmx, 0.05);
+      my = lerp(my, tmy, 0.05);
+      heroBg.style.setProperty('--mx', mx.toFixed(3));
+      heroBg.style.setProperty('--my', my.toFixed(3));
+      requestAnimationFrame(heroParallaxTick);
+    })();
+  }
+
+  /* ==========================================================================
+     MAGNETIC BUTTONS
+     ========================================================================== */
+  if (!prefersReduced) {
+    document.querySelectorAll('.magnetic').forEach((btn) => {
+      let bx = 0, by = 0, tbx = 0, tby = 0;
+      btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        tbx = (e.clientX - rect.left - rect.width / 2) * 0.35;
+        tby = (e.clientY - rect.top - rect.height / 2) * 0.35;
+      });
+      btn.addEventListener('mouseleave', () => { tbx = 0; tby = 0; });
+      (function magneticTick() {
+        bx = lerp(bx, tbx, 0.18);
+        by = lerp(by, tby, 0.18);
+        btn.style.transform = `translate(${bx.toFixed(2)}px, ${by.toFixed(2)}px)`;
+        requestAnimationFrame(magneticTick);
+      })();
+    });
+  }
+
+  /* ==========================================================================
+     "LOOK-IN" EMBED — 3D TILT
+     ========================================================================== */
+  if (!prefersReduced) {
+    document.querySelectorAll('.showcase-frame-wrap').forEach((wrap) => {
+      const frame = wrap.querySelector('.browser-frame');
+      if (!frame) return;
+      let rx = 0, ry = 0, trx = 0, try_ = 0;
+      wrap.addEventListener('mousemove', (e) => {
+        const rect = wrap.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width;
+        const py = (e.clientY - rect.top) / rect.height;
+        try_ = (px - 0.5) * 10;
+        trx = (0.5 - py) * 8;
+      });
+      wrap.addEventListener('mouseleave', () => { trx = 0; try_ = 0; });
+      (function tiltTick() {
         rx = lerp(rx, trx, 0.12);
         ry = lerp(ry, try_, 0.12);
-        frame.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
-        if (Math.abs(rx - trx) > 0.05 || Math.abs(ry - try_) > 0.05) {
-          raf = requestAnimationFrame(tickTilt);
-        } else { frame.style.transform = 'rotateX(0) rotateY(0)'; raf = null; }
-      }
-    }
-
-    // Click anywhere on the chrome bar opens the site (iframe handles itself)
-    $('.lookin__chrome', lookin).addEventListener('click', () => {
-      window.open(url, '_blank', 'noopener');
+        frame.style.transform = `perspective(1400px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+        requestAnimationFrame(tiltTick);
+      })();
     });
-    $('.lookin__chrome', lookin).style.cursor = 'pointer';
+  }
+
+  /* ==========================================================================
+     "LOOK-IN" EMBED — LAZY LOAD + GRACEFUL FALLBACK
+     Many sites block being framed via X-Frame-Options / CSP without firing a
+     JS 'error' event (the frame just loads blank), so a timeout is the most
+     reliable signal here — matches the fallback approach from the build spec.
+     ========================================================================== */
+  document.querySelectorAll('.browser-frame[data-lookin]').forEach((frame) => {
+    const iframe = frame.querySelector('.browser-iframe');
+    const body = frame.querySelector('.browser-body');
+    if (!iframe || !body) return;
+    const src = iframe.dataset.src;
+    let settled = false;
+
+    const markLoaded = () => { if (!settled) { settled = true; iframe.classList.add('is-loaded'); } };
+    const markFallback = () => { if (!settled) { settled = true; body.classList.add('is-fallback'); } };
+
+    const loadObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          iframe.src = src;
+          setTimeout(() => { if (!settled) markFallback(); }, 4500);
+          loadObserver.disconnect();
+        }
+      });
+    }, { rootMargin: '200px' });
+    loadObserver.observe(frame);
+
+    iframe.addEventListener('load', markLoaded);
+    iframe.addEventListener('error', markFallback);
   });
 
-  /* ========================================================================
-     10. YouTube facades — poster + play button, iframe injected on click
-         (YouTube JS never loads until interaction)
-     ======================================================================== */
-  $$('.yt-card').forEach(card => {
-    const videoId = card.dataset.videoId;
-    const poster  = $('.yt-card__poster', card);
-    const screen  = $('.yt-card__screen', card);
-
-    // Try YouTube's auto-generated thumbnail as the poster backdrop
-    if (videoId && !videoId.startsWith('[')) {
-      const img = new Image();
-      img.onload = () => {
-        if (img.naturalWidth > 120) { // 120x90 = YouTube's "no thumb" placeholder
-          poster.style.background = `url(https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg) center/cover`;
-          poster.style.backgroundColor = '#000';
-        }
-      };
-      img.src = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-    }
-
-    poster.addEventListener('click', () => {
-      if (!videoId || videoId.startsWith('[')) {
-        console.warn('[portfolio] YouTube video ID placeholder not set for', card);
-        return;
-      }
+  /* ==========================================================================
+     YOUTUBE SHOWCASE — CLICK-TO-LOAD (keeps YouTube's JS off the page
+     until the visitor actually presses play)
+     ========================================================================== */
+  document.querySelectorAll('.video-frame[data-video]').forEach((frame) => {
+    const btn = frame.querySelector('.play-btn');
+    const poster = frame.querySelector('.video-poster');
+    const ytId = frame.dataset.ytId;
+    if (!btn) return;
+    btn.addEventListener('click', () => {
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-      iframe.title = 'Project preview video';
+      iframe.className = 'video-iframe';
+      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+      iframe.title = 'Project showcase video';
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
       iframe.allowFullscreen = true;
-      poster.remove();
-      screen.appendChild(iframe);
+      iframe.loading = 'lazy';
+      frame.appendChild(iframe);
+      if (poster) poster.style.display = 'none';
+    }, { once: true });
+  });
+
+  /* ==========================================================================
+     EASED ANCHOR SCROLL
+     Custom rAF-driven easing for in-page navigation (nav links, CTA, footer),
+     giving that "weighted" Apple-style scroll on click. Ordinary wheel/trackpad
+     scrolling stays fully native — intentionally not hijacked — so that
+     position: sticky (nav, pinned Approach section) keeps working perfectly.
+     ========================================================================== */
+  function easedScrollTo(targetY, duration = 900) {
+    const startY = window.scrollY;
+    const diff = targetY - startY;
+    const startTime = performance.now();
+    function step(now) {
+      const t = clamp((now - startTime) / duration, 0, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      window.scrollTo(0, startY + diff * eased);
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const id = link.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      const navHeight = nav ? nav.offsetHeight : 0;
+      const y = target.getBoundingClientRect().top + window.scrollY - navHeight + 1;
+      if (prefersReduced) {
+        window.scrollTo(0, y);
+      } else {
+        easedScrollTo(y);
+      }
     });
   });
 
+  /* Initial paint */
+  updateScrollChrome();
 })();
