@@ -1,0 +1,94 @@
+# Build Prompt: Apple-Style Interactive Portfolio Site
+
+## Role
+Build a single-page portfolio site for **Michael**. It should look and move like an actual Apple product page: white, bright, high-contrast black type, huge type scale, generous space, and scroll-driven motion. Not a dark, moody, "startup landing page" look. Reference apple.com directly for tone.
+
+## Hard Constraints
+- **Pure HTML, CSS, and vanilla JS only.** No frameworks, no animation libraries (GSAP, Framer Motion, AOS), no external font services. Use the native `-apple-system` font stack so the site renders in real San Francisco on Apple devices and a close system equivalent everywhere else.
+- Three files: `index.html`, `styles.css`, `script.js`. No build step.
+- Extremely responsive: fluid type and spacing with `clamp()`, tested breakpoints at desktop, tablet, and mobile, no layout breakage at any width.
+- 60fps animation target. No custom cursor replacement, no gimmicks that aren't in Apple's own site.
+
+## Design Language
+Apple's actual system, not an approximation:
+- **Background:** white `#ffffff`, alternating with light grey `#f5f5f7` between sections, the way apple.com alternates panels.
+- **Text:** near-black `#1d1d1f` for headlines and body, grey `#86868b` for secondary text.
+- **Accent:** a single Apple blue `#0071e3` used only for links and one primary button state. No gold, no dark green, no multi-color palette.
+- **Type:** `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`. Headlines huge and bold with tight letter-spacing (`clamp(2.75rem, 7vw, 6.5rem)` for the hero), body copy lighter weight, generous line-height.
+- **Easing:** `cubic-bezier(0.16, 1, 0.3, 1)` for reveals, `cubic-bezier(0.65, 0, 0.35, 1)` for scroll-linked / pinned motion.
+- **Buttons:** primary CTA is a solid black pill button, white text. Secondary actions are blue text links with a chevron, exactly like Apple's "Learn more >".
+
+## Site Structure
+
+### 1. Nav
+Fixed top nav, white with a translucent blur (`backdrop-filter: blur()`) and a hairline bottom border, present from the start (not transparent-over-hero) since the hero is already white. Logo/name left, section links right, plain text, small size, active link gets a subtle color shift, no underline glow.
+
+### 2. Hero
+White background. Centered, huge black headline: **"I build brands, products, and the software behind them."** One-line grey subhead beneath it, plain and factual, no metaphor. Primary black pill CTA ("See the work") plus a secondary blue text link. Headline reveals word by word on load. No background gradient blobs, no dark tone, no floating shapes: keep it as clean as an actual Apple hero.
+
+### 3. Philosophy — pinned scroll section
+Short pinned section, light grey background, large centered text that Apple often uses on scroll: 3–4 short, separate declarative sentences that highlight one at a time as the user scrolls through the section (dim to full black/blue as each becomes active). Content:
+- "I design the brand."
+- "I build the product."
+- "I write the code."
+- "I bring it to customers."
+Keep each sentence short. No single long paragraph, no rhetorical flourish.
+
+### 4. Live Work — "Look-In" Embeds
+Three full-width sections, one per project, each using the **Look-In Embed Component** (spec below), alternating white / light-grey background per section:
+
+**Top Carne** — `https://topcarne.eu`
+Premium dried-meat brand. Full storefront, Stripe and Packeta checkout, multilingual, live store locator.
+
+**Sensory Restore** — `https://sensoryrestore.com`
+Sleep and wellness brand for the US market. Positioning, storefront, creative, and paid acquisition, built in-house.
+
+**Spectre** — `[SPECTRE_SITE_URL]`
+Subscription licensing platform with a native desktop client. Argon2id auth, an HMAC-signed API, Discord OAuth2 sign-in, tiered plans, a real-time admin dashboard, and a C++ client with its own interface.
+
+### 5. Unreleased — Video Showcase
+Two-up section (stacked on mobile), light grey background, using the **YouTube Showcase Component** (spec below):
+
+**Reeview** — NFC-powered review collection for hospitality venues. Tap a card, land on a Google review prompt. A dashboard behind it tracks reviews, alerts, and trends. Placeholder video ID: `[REEVIEW_YOUTUBE_ID]`.
+
+**NitroSnipe** — real-time monitoring dashboard for catching Discord Nitro drops. Low-latency data pipeline, live-updating UI. Placeholder video ID: `[NITROSNIPE_YOUTUBE_ID]`.
+
+### 6. Footer / Contact
+White background. Centered, short headline ("Building something? Let's talk."), black pill CTA with the email, name and location beneath it, social links in plain grey text.
+
+## Interaction & Animation Spec
+- **Scroll reveals:** elements enter via `IntersectionObserver`, opacity 0→1 and translateY(30px→0), no blur filter (Apple doesn't blur text on reveal), staggered slightly for grouped elements.
+- **Pinned philosophy section:** `position: sticky`, each sentence's color/opacity driven by scroll progress through the section.
+- **Magnetic buttons:** primary CTAs shift slightly toward the cursor on hover, spring back on leave.
+- **Parallax:** none in the hero (Apple's plain white heroes don't parallax). Reserve any parallax for the look-in embeds' tilt only.
+- **Look-in tilt:** a subtle 3D tilt toward the cursor on the browser-frame embeds, spring back on mouse-leave.
+- **Nav:** stays fixed and blurred throughout, no dramatic shrink/expand.
+- **Eased anchor scroll:** clicking any in-page link eases to its target with a custom curve, not an instant jump.
+
+## "Look-In" Embed Component (Top Carne, Sensory Restore, Spectre)
+- Browser-chrome mockup: light grey chrome bar, three small grey traffic-light dots (not the red/yellow/green macOS colors — keep it monochrome to match the rest of the site), a centered pill showing the real domain.
+- **Aspect ratio: 16:9, fixed.** The previous 16:10 ratio distorted these previews; 16:9 must be used for every embed so real site screenshots and live iframes crop consistently.
+- Inner content: live `<iframe>`, lazy-loaded only once the component nears the viewport.
+- Fallback: if nothing renders within ~4–5 seconds (common with sites that block framing via CSP/X-Frame-Options), swap in a static screenshot at the same 16:9 ratio.
+- Hover: subtle 3D tilt toward the cursor, "Visit Site" overlay button appears.
+- Copy beside each frame: project name, two short plain sentences (never one sentence stitched together with an em dash), and a small row of 2–3 plain-text tags.
+
+## YouTube Showcase Component (Reeview, NitroSnipe)
+- Light card, poster image with a black-on-white play button, swaps to the real YouTube iframe embed only on click (keeps YouTube's JS off the page until needed).
+- "Unreleased" label, small and plain, no bright badge color, just black text on a light pill.
+- Two short plain sentences per project underneath.
+
+## Writing Rules (apply to every piece of copy on the page)
+- **Never use an em dash ("—") anywhere in the copy.** Split into two sentences or use a comma instead.
+- Short, declarative sentences. Apple's copy is plain, confident, and literal, not clever or metaphor-heavy.
+- Active voice. Say what something does, not what it "empowers you to do."
+- No filler adjectives ("extremely," "incredibly," "revolutionary"). State the fact.
+- Section headers are short and literal ("Businesses running today," not "Where the magic happens").
+
+## Performance & Polish
+- Respect `prefers-reduced-motion`: disable tilt and magnetic effects, keep simple opacity fades only.
+- Lazy-load all iframes and images, reserve their space to avoid layout shift.
+- Debounce/throttle all scroll and mousemove listeners via `requestAnimationFrame`.
+
+## Deliverable
+Three clean, commented files (`index.html`, `styles.css`, `script.js`) with clear placeholder comments for `[SPECTRE_SITE_URL]`, `[REEVIEW_YOUTUBE_ID]`, `[NITROSNIPE_YOUTUBE_ID]`, screenshot fallback paths, and contact info.
