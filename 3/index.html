@@ -1,94 +1,221 @@
-# Build Prompt: Apple-Style Interactive Portfolio Site
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Michael — Brands, products, and the software behind them</title>
+<meta name="description" content="Michael designs brands, builds products, and writes the software behind them.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-## Role
-Build a single-page portfolio site for **Michael**. It should look and move like an actual Apple product page: white, bright, high-contrast black type, huge type scale, generous space, and scroll-driven motion. Not a dark, moody, "startup landing page" look. Reference apple.com directly for tone.
+<!-- ============================= NAV ============================= -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-logo">Michael</a>
+    <nav class="nav-links" aria-label="Section navigation">
+      <a href="#work" data-nav-link>Work</a>
+      <a href="#unreleased" data-nav-link>Unreleased</a>
+      <a href="#contact" data-nav-link>Contact</a>
+    </nav>
+  </div>
+</header>
 
-## Hard Constraints
-- **Pure HTML, CSS, and vanilla JS only.** No frameworks, no animation libraries (GSAP, Framer Motion, AOS), no external font services. Use the native `-apple-system` font stack so the site renders in real San Francisco on Apple devices and a close system equivalent everywhere else.
-- Three files: `index.html`, `styles.css`, `script.js`. No build step.
-- Extremely responsive: fluid type and spacing with `clamp()`, tested breakpoints at desktop, tablet, and mobile, no layout breakage at any width.
-- 60fps animation target. No custom cursor replacement, no gimmicks that aren't in Apple's own site.
+<main id="top">
 
-## Design Language
-Apple's actual system, not an approximation:
-- **Background:** white `#ffffff`, alternating with light grey `#f5f5f7` between sections, the way apple.com alternates panels.
-- **Text:** near-black `#1d1d1f` for headlines and body, grey `#86868b` for secondary text.
-- **Accent:** a single Apple blue `#0071e3` used only for links and one primary button state. No gold, no dark green, no multi-color palette.
-- **Type:** `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`. Headlines huge and bold with tight letter-spacing (`clamp(2.75rem, 7vw, 6.5rem)` for the hero), body copy lighter weight, generous line-height.
-- **Easing:** `cubic-bezier(0.16, 1, 0.3, 1)` for reveals, `cubic-bezier(0.65, 0, 0.35, 1)` for scroll-linked / pinned motion.
-- **Buttons:** primary CTA is a solid black pill button, white text. Secondary actions are blue text links with a chevron, exactly like Apple's "Learn more >".
+  <!-- ============================= HERO ============================= -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 class="hero-headline" id="hero-headline" aria-label="I build brands, products, and the software behind them.">
+        <!-- Words injected by script.js for word-by-word reveal -->
+      </h1>
+      <p class="hero-subhead reveal">Independent designer and engineer. I take projects from idea to production, alone.</p>
+      <div class="hero-ctas reveal">
+        <a href="#work" class="btn btn-primary" data-magnetic>See the work</a>
+        <a href="#contact" class="btn btn-link">Get in touch <span class="chevron">›</span></a>
+      </div>
+    </div>
+  </section>
 
-## Site Structure
+  <!-- ============================= PHILOSOPHY (pinned) ============================= -->
+  <section class="philosophy" id="philosophy">
+    <div class="philosophy-sticky">
+      <ul class="philosophy-list" id="philosophy-list">
+        <li class="philosophy-line" data-index="0">I design the brand.</li>
+        <li class="philosophy-line" data-index="1">I build the product.</li>
+        <li class="philosophy-line" data-index="2">I write the code.</li>
+        <li class="philosophy-line" data-index="3">I bring it to customers.</li>
+      </ul>
+    </div>
+    <!-- spacer height controls scroll length of the pin, set in CSS -->
+  </section>
 
-### 1. Nav
-Fixed top nav, white with a translucent blur (`backdrop-filter: blur()`) and a hairline bottom border, present from the start (not transparent-over-hero) since the hero is already white. Logo/name left, section links right, plain text, small size, active link gets a subtle color shift, no underline glow.
+  <!-- ============================= LIVE WORK ============================= -->
+  <section class="work" id="work">
 
-### 2. Hero
-White background. Centered, huge black headline: **"I build brands, products, and the software behind them."** One-line grey subhead beneath it, plain and factual, no metaphor. Primary black pill CTA ("See the work") plus a secondary blue text link. Headline reveals word by word on load. No background gradient blobs, no dark tone, no floating shapes: keep it as clean as an actual Apple hero.
+    <div class="section-head reveal">
+      <p class="eyebrow">Live work</p>
+      <h2>Businesses running today.</h2>
+    </div>
 
-### 3. Philosophy — pinned scroll section
-Short pinned section, light grey background, large centered text that Apple often uses on scroll: 3–4 short, separate declarative sentences that highlight one at a time as the user scrolls through the section (dim to full black/blue as each becomes active). Content:
-- "I design the brand."
-- "I build the product."
-- "I write the code."
-- "I bring it to customers."
-Keep each sentence short. No single long paragraph, no rhetorical flourish.
+    <!-- ---- Top Carne ---- -->
+    <article class="lookin lookin--white">
+      <div class="lookin-inner">
+        <div class="lookin-frame reveal" data-tilt data-lookin>
+          <div class="browser-chrome">
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <span class="chrome-pill">topcarne.eu</span>
+          </div>
+          <div class="lookin-viewport" data-src="https://topcarne.eu" data-fallback="assets/topcarne-fallback.jpg">
+            <div class="lookin-placeholder"></div>
+          </div>
+          <a href="https://topcarne.eu" target="_blank" rel="noopener" class="lookin-overlay">
+            <span class="btn btn-primary">Visit Site</span>
+          </a>
+        </div>
+        <div class="lookin-copy reveal">
+          <h3>Top Carne</h3>
+          <p>Top Carne sells premium dried meat online across Europe. The store handles checkout with Stripe and Packeta, in multiple languages, with a live locator for physical stockists.</p>
+          <ul class="tags">
+            <li>Storefront</li>
+            <li>Stripe + Packeta</li>
+            <li>Multilingual</li>
+          </ul>
+        </div>
+      </div>
+    </article>
 
-### 4. Live Work — "Look-In" Embeds
-Three full-width sections, one per project, each using the **Look-In Embed Component** (spec below), alternating white / light-grey background per section:
+    <!-- ---- Sensory Restore ---- -->
+    <article class="lookin lookin--grey">
+      <div class="lookin-inner lookin-inner--reverse">
+        <div class="lookin-frame reveal" data-tilt data-lookin>
+          <div class="browser-chrome">
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <span class="chrome-pill">sensoryrestore.com</span>
+          </div>
+          <div class="lookin-viewport" data-src="https://sensoryrestore.com" data-fallback="assets/sensoryrestore-fallback.jpg">
+            <div class="lookin-placeholder"></div>
+          </div>
+          <a href="https://sensoryrestore.com" target="_blank" rel="noopener" class="lookin-overlay">
+            <span class="btn btn-primary">Visit Site</span>
+          </a>
+        </div>
+        <div class="lookin-copy reveal">
+          <h3>Sensory Restore</h3>
+          <p>Sensory Restore is a sleep and wellness brand built for the US market. I built the positioning, the storefront, the creative, and the paid acquisition in-house.</p>
+          <ul class="tags">
+            <li>Brand + storefront</li>
+            <li>Paid acquisition</li>
+            <li>US market</li>
+          </ul>
+        </div>
+      </div>
+    </article>
 
-**Top Carne** — `https://topcarne.eu`
-Premium dried-meat brand. Full storefront, Stripe and Packeta checkout, multilingual, live store locator.
+    <!-- ---- Spectre ---- -->
+    <article class="lookin lookin--white">
+      <div class="lookin-inner">
+        <div class="lookin-frame reveal" data-tilt data-lookin>
+          <div class="browser-chrome">
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <span class="chrome-dot"></span>
+            <!-- [SPECTRE_SITE_URL]: replace with the live Spectre domain, e.g. spectre.gg -->
+            <span class="chrome-pill">[SPECTRE_SITE_URL]</span>
+          </div>
+          <!-- [SPECTRE_SITE_URL]: replace data-src below with the real URL once public -->
+          <div class="lookin-viewport" data-src="[SPECTRE_SITE_URL]" data-fallback="assets/spectre-fallback.jpg">
+            <div class="lookin-placeholder"></div>
+          </div>
+          <a href="[SPECTRE_SITE_URL]" target="_blank" rel="noopener" class="lookin-overlay">
+            <span class="btn btn-primary">Visit Site</span>
+          </a>
+        </div>
+        <div class="lookin-copy reveal">
+          <h3>Spectre</h3>
+          <p>Spectre is a subscription licensing platform with its own desktop client. Auth runs on Argon2id, the API is signed with HMAC, and sign-in works through Discord OAuth2.</p>
+          <ul class="tags">
+            <li>Licensing platform</li>
+            <li>Admin dashboard</li>
+            <li>C++ desktop client</li>
+          </ul>
+        </div>
+      </div>
+    </article>
 
-**Sensory Restore** — `https://sensoryrestore.com`
-Sleep and wellness brand for the US market. Positioning, storefront, creative, and paid acquisition, built in-house.
+  </section>
 
-**Spectre** — `[SPECTRE_SITE_URL]`
-Subscription licensing platform with a native desktop client. Argon2id auth, an HMAC-signed API, Discord OAuth2 sign-in, tiered plans, a real-time admin dashboard, and a C++ client with its own interface.
+  <!-- ============================= UNRELEASED ============================= -->
+  <section class="unreleased" id="unreleased">
+    <div class="section-head reveal">
+      <p class="eyebrow">Unreleased</p>
+      <h2>Built, not yet public.</h2>
+    </div>
 
-### 5. Unreleased — Video Showcase
-Two-up section (stacked on mobile), light grey background, using the **YouTube Showcase Component** (spec below):
+    <div class="showcase-grid">
 
-**Reeview** — NFC-powered review collection for hospitality venues. Tap a card, land on a Google review prompt. A dashboard behind it tracks reviews, alerts, and trends. Placeholder video ID: `[REEVIEW_YOUTUBE_ID]`.
+      <!-- ---- Reeview ---- -->
+      <article class="showcase-card reveal" data-youtube-id="[REEVIEW_YOUTUBE_ID]">
+        <div class="showcase-media">
+          <button class="showcase-play" type="button" aria-label="Play Reeview video">
+            <!-- Poster image placeholder: replace background in CSS or swap for a real <img> -->
+            <span class="play-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </span>
+          </button>
+          <div class="showcase-iframe-slot"></div>
+        </div>
+        <div class="showcase-copy">
+          <span class="pill-label">Unreleased</span>
+          <h3>Reeview</h3>
+          <p>Reeview collects reviews for hospitality venues through NFC cards. A tap sends the guest straight to a Google review prompt.</p>
+          <p>A dashboard behind it tracks reviews, alerts, and trends for the venue.</p>
+        </div>
+      </article>
 
-**NitroSnipe** — real-time monitoring dashboard for catching Discord Nitro drops. Low-latency data pipeline, live-updating UI. Placeholder video ID: `[NITROSNIPE_YOUTUBE_ID]`.
+      <!-- ---- NitroSnipe ---- -->
+      <article class="showcase-card reveal" data-youtube-id="[NITROSNIPE_YOUTUBE_ID]">
+        <div class="showcase-media">
+          <button class="showcase-play" type="button" aria-label="Play NitroSnipe video">
+            <span class="play-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </span>
+          </button>
+          <div class="showcase-iframe-slot"></div>
+        </div>
+        <div class="showcase-copy">
+          <span class="pill-label">Unreleased</span>
+          <h3>NitroSnipe</h3>
+          <p>NitroSnipe monitors Discord Nitro drops in real time and surfaces them the moment they appear.</p>
+          <p>The dashboard updates live on a low-latency data pipeline.</p>
+        </div>
+      </article>
 
-### 6. Footer / Contact
-White background. Centered, short headline ("Building something? Let's talk."), black pill CTA with the email, name and location beneath it, social links in plain grey text.
+    </div>
+  </section>
 
-## Interaction & Animation Spec
-- **Scroll reveals:** elements enter via `IntersectionObserver`, opacity 0→1 and translateY(30px→0), no blur filter (Apple doesn't blur text on reveal), staggered slightly for grouped elements.
-- **Pinned philosophy section:** `position: sticky`, each sentence's color/opacity driven by scroll progress through the section.
-- **Magnetic buttons:** primary CTAs shift slightly toward the cursor on hover, spring back on leave.
-- **Parallax:** none in the hero (Apple's plain white heroes don't parallax). Reserve any parallax for the look-in embeds' tilt only.
-- **Look-in tilt:** a subtle 3D tilt toward the cursor on the browser-frame embeds, spring back on mouse-leave.
-- **Nav:** stays fixed and blurred throughout, no dramatic shrink/expand.
-- **Eased anchor scroll:** clicking any in-page link eases to its target with a custom curve, not an instant jump.
+  <!-- ============================= FOOTER / CONTACT ============================= -->
+  <footer class="contact" id="contact">
+    <div class="contact-inner reveal">
+      <h2>Building something? Let's talk.</h2>
+      <!-- Contact info: replace email with the real address -->
+      <a href="mailto:hello@michael.dev" class="btn btn-primary" data-magnetic>hello@michael.dev</a>
+      <p class="contact-meta">Michael · Independent designer and engineer</p>
+      <div class="contact-social">
+        <!-- Social links: replace hrefs with real profiles -->
+        <a href="#">GitHub</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">X</a>
+      </div>
+    </div>
+  </footer>
 
-## "Look-In" Embed Component (Top Carne, Sensory Restore, Spectre)
-- Browser-chrome mockup: light grey chrome bar, three small grey traffic-light dots (not the red/yellow/green macOS colors — keep it monochrome to match the rest of the site), a centered pill showing the real domain.
-- **Aspect ratio: 16:9, fixed.** The previous 16:10 ratio distorted these previews; 16:9 must be used for every embed so real site screenshots and live iframes crop consistently.
-- Inner content: live `<iframe>`, lazy-loaded only once the component nears the viewport.
-- Fallback: if nothing renders within ~4–5 seconds (common with sites that block framing via CSP/X-Frame-Options), swap in a static screenshot at the same 16:9 ratio.
-- Hover: subtle 3D tilt toward the cursor, "Visit Site" overlay button appears.
-- Copy beside each frame: project name, two short plain sentences (never one sentence stitched together with an em dash), and a small row of 2–3 plain-text tags.
+</main>
 
-## YouTube Showcase Component (Reeview, NitroSnipe)
-- Light card, poster image with a black-on-white play button, swaps to the real YouTube iframe embed only on click (keeps YouTube's JS off the page until needed).
-- "Unreleased" label, small and plain, no bright badge color, just black text on a light pill.
-- Two short plain sentences per project underneath.
-
-## Writing Rules (apply to every piece of copy on the page)
-- **Never use an em dash ("—") anywhere in the copy.** Split into two sentences or use a comma instead.
-- Short, declarative sentences. Apple's copy is plain, confident, and literal, not clever or metaphor-heavy.
-- Active voice. Say what something does, not what it "empowers you to do."
-- No filler adjectives ("extremely," "incredibly," "revolutionary"). State the fact.
-- Section headers are short and literal ("Businesses running today," not "Where the magic happens").
-
-## Performance & Polish
-- Respect `prefers-reduced-motion`: disable tilt and magnetic effects, keep simple opacity fades only.
-- Lazy-load all iframes and images, reserve their space to avoid layout shift.
-- Debounce/throttle all scroll and mousemove listeners via `requestAnimationFrame`.
-
-## Deliverable
-Three clean, commented files (`index.html`, `styles.css`, `script.js`) with clear placeholder comments for `[SPECTRE_SITE_URL]`, `[REEVIEW_YOUTUBE_ID]`, `[NITROSNIPE_YOUTUBE_ID]`, screenshot fallback paths, and contact info.
+<script src="script.js"></script>
+</body>
+</html>
