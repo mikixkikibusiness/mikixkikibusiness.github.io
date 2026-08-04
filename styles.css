@@ -206,15 +206,46 @@ button {
    ========================================================================= */
 
 .hero {
+  position: relative;
   min-height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--white);
   padding: calc(var(--nav-height) + 2rem) var(--edge) 4rem;
+  overflow: hidden;
+}
+
+/* ---- Ambient glow ----
+   A slow, barely-there radial highlight drifting behind the headline, like
+   light passing over glass. Pure CSS animation, not scroll-linked, so it
+   never reads as parallax. Kept extremely subtle: this is the hero's one
+   signature motion, everything else stays still. */
+
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(1100px, 140vw);
+  height: min(1100px, 140vw);
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.06) 0%, rgba(0, 113, 227, 0.03) 35%, rgba(0, 113, 227, 0) 65%);
+  transform: translate(-50%, -50%);
+  animation: hero-glow-drift 18s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes hero-glow-drift {
+  0%, 100% {
+    transform: translate(-52%, -54%) scale(1);
+  }
+  50% {
+    transform: translate(-48%, -46%) scale(1.08);
+  }
 }
 
 .hero-inner {
+  position: relative;
   max-width: 980px;
   margin: 0 auto;
   text-align: center;
@@ -242,6 +273,14 @@ button {
   transform: translateY(0);
 }
 
+/* One word in the headline carries the blue accent instead of solid
+   black, the same restrained "one signature detail" move used on the
+   role badges. Chosen word: "software", the word that differentiates
+   Michael from a pure brand/marketing generalist. */
+.hero-headline .word-accent {
+  color: var(--blue);
+}
+
 .hero-subhead {
   font-size: clamp(1.1rem, 2vw, 1.5rem);
   font-weight: 400;
@@ -257,6 +296,62 @@ button {
   justify-content: center;
   gap: 1.5rem;
   flex-wrap: wrap;
+}
+
+/* ---- Scroll cue ----
+   A thin animated line nudging the eye toward the philosophy section.
+   Quiet by design: no arrow icon, no bounce, just a line that draws down
+   and fades, on loop. */
+
+.hero-scroll-cue {
+  position: absolute;
+  bottom: clamp(1.5rem, 4vh, 2.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 24px;
+  height: 40px;
+}
+
+.hero-scroll-cue-line {
+  width: 1px;
+  height: 100%;
+  background: var(--ink-secondary);
+  transform-origin: top;
+  animation: hero-scroll-draw 2.2s var(--ease-scroll) infinite;
+}
+
+@keyframes hero-scroll-draw {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  35% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  70% {
+    transform: scaleY(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow {
+    animation: none;
+  }
+
+  .hero-scroll-cue-line {
+    animation: none;
+    transform: scaleY(1);
+    opacity: 0.4;
+  }
 }
 
 /* =========================================================================
@@ -398,15 +493,7 @@ button {
   overflow: hidden;
 }
 
-.lookin-viewport iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.lookin-viewport img.fallback-shot {
+.lookin-viewport img.lookin-shot {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -415,6 +502,12 @@ button {
      any letterboxing is filled with the viewport's background color */
   object-fit: contain;
   background: var(--grey-panel);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-reveal);
+}
+
+.lookin-viewport img.lookin-shot.is-loaded {
+  opacity: 1;
 }
 
 .lookin-placeholder {
