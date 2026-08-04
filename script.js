@@ -1,9 +1,10 @@
 /* =========================================================================
    MICHAEL — PORTFOLIO
    Vanilla JS only. No dependencies.
-   Sections: reduced-motion check, hero word reveal, scroll reveals,
-   pinned philosophy progress, magnetic buttons, look-in tilt + lazy iframe,
-   youtube showcase click-to-embed, eased anchor scroll, active nav link.
+   Sections: reduced-motion check, hero word reveal + accent word, scroll
+   reveals, pinned philosophy progress, magnetic buttons, look-in tilt +
+   image fade-in, youtube showcase click-to-embed, eased anchor scroll,
+   active nav link.
    ========================================================================= */
 
 (function () {
@@ -22,10 +23,16 @@
     var fullText = headline.getAttribute("aria-label") || "";
     var words = fullText.split(" ").filter(Boolean);
 
+    // The single word that carries the blue accent instead of solid black.
+    // Matched case-insensitively, punctuation stripped, so "software" still
+    // matches if the headline copy ever picks up trailing punctuation.
+    var accentWord = "software";
+
     var frag = document.createDocumentFragment();
     words.forEach(function (word, i) {
       var span = document.createElement("span");
-      span.className = "word";
+      var bareWord = word.replace(/[^\w]/g, "").toLowerCase();
+      span.className = bareWord === accentWord ? "word word-accent" : "word";
       span.textContent = word;
       frag.appendChild(span);
       if (i < words.length - 1) {
@@ -209,85 +216,34 @@
   }
 
   /* =======================================================================
-     LOOK-IN EMBEDS — lazy-load iframe near viewport, fall back to
-     a static screenshot if nothing renders within ~4.5s (CSP/X-Frame-Options
-     block the frame silently, so we can't detect failure directly; the
-     timeout is our best signal).
+     LOOK-IN SHOTS — fade each screenshot in once it finishes loading,
+     clearing the shimmer placeholder underneath. Images use loading="lazy"
+     natively and are preloaded via <link rel="preload"> in <head>, so this
+     just handles the crossfade rather than any fetching itself.
      ======================================================================= */
 
-  function initLookinEmbeds() {
-    var viewports = document.querySelectorAll(".lookin-viewport");
-    if (!viewports.length) return;
+  function initLookinShots() {
+    var shots = document.querySelectorAll(".lookin-shot");
+    if (!shots.length) return;
 
-    var FALLBACK_TIMEOUT = 4500;
+    shots.forEach(function (img) {
+      var viewport = img.closest(".lookin-viewport");
+      var placeholder = viewport ? viewport.querySelector(".lookin-placeholder") : null;
 
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          observer.unobserve(entry.target);
-          loadEmbed(entry.target);
-        });
-      },
-      { rootMargin: "200px 0px" }
-    );
+      function reveal() {
+        img.classList.add("is-loaded");
+        if (placeholder) placeholder.remove();
+      }
 
-    viewports.forEach(function (vp) {
-      observer.observe(vp);
+      // Preloaded/cached images can be complete before this listener
+      // attaches, so check first rather than waiting on an event that
+      // already fired.
+      if (img.complete && img.naturalWidth > 0) {
+        reveal();
+      } else {
+        img.addEventListener("load", reveal, { once: true });
+      }
     });
-
-    function loadEmbed(viewport) {
-      var src = viewport.getAttribute("data-src");
-      var fallback = viewport.getAttribute("data-fallback");
-      var placeholder = viewport.querySelector(".lookin-placeholder");
-
-      // Skip unresolved placeholder URLs (e.g. "[SPECTRE_SITE_URL]") and go
-      // straight to the fallback screenshot.
-      if (!src || src.indexOf("[") === 0) {
-        showFallback();
-        return;
-      }
-
-      var iframe = document.createElement("iframe");
-      iframe.setAttribute("loading", "lazy");
-      iframe.setAttribute("title", src);
-      iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
-
-      var settled = false;
-
-      var timer = setTimeout(function () {
-        if (settled) return;
-        settled = true;
-        showFallback();
-      }, FALLBACK_TIMEOUT);
-
-      iframe.addEventListener("load", function () {
-        // A load event fires even if the site blocks framing (some browsers
-        // still fire it for blocked frames), so this alone isn't proof of
-        // success. The timeout above is the real safety net; this just
-        // clears the placeholder shimmer once we get any response.
-        if (placeholder) placeholder.remove();
-      });
-
-      iframe.src = src;
-      viewport.appendChild(iframe);
-
-      function showFallback() {
-        clearTimeout(timer);
-        var existingIframe = viewport.querySelector("iframe");
-        if (existingIframe) existingIframe.remove();
-        if (placeholder) placeholder.remove();
-
-        if (fallback) {
-          var img = document.createElement("img");
-          img.className = "fallback-shot";
-          img.src = fallback;
-          img.alt = src + " preview";
-          img.loading = "lazy";
-          viewport.appendChild(img);
-        }
-      }
-    }
   }
 
   /* =======================================================================
@@ -432,7 +388,7 @@
     initPhilosophy();
     initMagneticButtons();
     initLookinTilt();
-    initLookinEmbeds();
+    initLookinShots();
     initYoutubeShowcase();
     initEasedAnchorScroll();
     initActiveNavLink();
